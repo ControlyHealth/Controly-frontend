@@ -1,16 +1,2 @@
-import { useState } from 'react'
-import './App.css'
-
-function App() {
-  const [count, setCount] = useState(0)
-
-  return (
-    <>
-      <div>
-        fs
-      </div>
-    </>
-  )
-}
-
-export default App
+// arquivo legado substituído pela nova arquitetura (ver router.tsx)
+export {}

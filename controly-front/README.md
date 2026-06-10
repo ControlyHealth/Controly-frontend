@@ -1,73 +1,58 @@
-# React + TypeScript + Vite
+# Controly · Gestão Odontológica
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+SaaS para clínicas odontológicas: cadastro de pacientes, **odontograma interativo** (mapa de dentes com observações por dente) e **automação de atendimento via WhatsApp**.
 
-Currently, two official plugins are available:
+Stack: **React 19 + TypeScript + Vite + Tailwind CSS v4 + React Router**. Os dados são persistidos localmente no `localStorage` através de uma camada de serviços — basta trocar essa camada por chamadas a uma API quando o backend estiver pronto.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Como rodar
 
-## React Compiler
+> Importante: se você abriu este projeto logo após a configuração inicial, apague a pasta `node_modules` e reinstale para garantir um estado limpo.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+```bash
+# (uma vez) limpeza, caso necessário
+rm -rf node_modules
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+npm install      # instala as dependências
+npm run dev      # ambiente de desenvolvimento (http://localhost:5173)
+npm run build    # build de produção (tsc + vite) -> dist/
+npm run preview  # serve o build de produção
+npm run lint     # ESLint
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Arquitetura de pastas
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
 ```
+src/
+├── main.tsx                  # ponto de entrada (RouterProvider)
+├── router.tsx                # definição das rotas
+├── index.css                 # Tailwind v4 + tema da marca
+│
+├── types/                    # tipos de domínio (Patient, Odontograma, Automation...)
+├── lib/                      # utilitários (storage, id, cn, format)
+├── data/                     # seeds e constantes (layout FDI dos dentes, status)
+├── services/                 # camada de dados (localStorage) — patients, odontogram, automations
+│
+├── components/
+│   ├── layout/               # AppLayout, Sidebar, Topbar
+│   └── ui/                   # Button, Card, Input, Modal, Badge, EmptyState
+│
+└── features/                 # módulos por funcionalidade
+    ├── dashboard/            # visão geral + métricas
+    ├── patients/             # lista, formulário e ficha do paciente
+    ├── odontogram/           # mapa de dentes interativo (Tooth, ToothPanel, Legend)
+    └── automations/          # fluxos de WhatsApp
+```
+
+A regra é simples: **lógica de dados fica em `services/`**, **estado de domínio em `types/`**, e cada tela vive em `features/<modulo>/`. Componentes genéricos reutilizáveis ficam em `components/ui`.
+
+## Funcionalidades
+
+- **Pacientes** — cadastro, edição, busca, exclusão; ficha individual com dados de contato e link direto para o WhatsApp.
+- **Odontograma** — notação FDI (32 dentes, arcadas superior e inferior). Clique em um dente para definir a condição (saudável, cárie, restaurado, em tratamento, ausente, implante) e registrar uma observação. Dentes com observação ganham um marcador; a aba "Registros" consolida tudo.
+- **Automações WhatsApp** — crie fluxos por gatilho (lembrete 24h, pós-consulta, retorno periódico, aniversário, novo agendamento) com mensagens personalizáveis (`{{nome}}`, `{{horario}}`) e ative/desative cada um.
+
+## Próximos passos sugeridos
+
+1. Substituir os `services/` por um cliente de API real (mantendo a mesma interface).
+2. Integrar um provedor de WhatsApp Business para disparo efetivo das automações.
+3. Autenticação e múltiplas clínicas (multi-tenant).
