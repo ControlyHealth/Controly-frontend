@@ -36,47 +36,64 @@ export function toothName(numero: number): string {
   return map[pos] ?? 'Dente'
 }
 
+/** Cores da raiz (dentina/cemento) — coroa usa as cores da condição. */
+export const ROOT_FILL = '#efdcb4'
+export const ROOT_STROKE = '#c8a86a'
+/** cor dos sulcos/linhas da coroa */
+export const GROOVE = '#94a3b8'
+
 /**
- * Formas anatômicas. Sistema de coordenadas: viewBox 36 x 56, dente desenhado
- * com a COROA em cima (y≈4..26) e a RAIZ embaixo (y≈26..55) — orientação natural
- * da arcada inferior. Para a arcada superior aplicamos um flip vertical.
+ * Anatomia desenhada em viewBox 36 x 56, com a COROA em cima (y≈2..25) e a
+ * RAIZ embaixo (y≈25..55) — orientação natural da arcada inferior. A arcada
+ * superior recebe um flip vertical. Molares têm 2 raízes (inferior) ou 3
+ * raízes (superior, via rootsUpper).
  */
 export interface ToothShape {
   crown: string
   roots: string
-  /** centro Y da coroa (na orientação inferior, sem flip) — usado p/ marcadores */
+  /** raízes alternativas para molares superiores (3 raízes) */
+  rootsUpper?: string
+  /** sulcos/linhas desenhados sobre a coroa (apenas traço) */
+  grooves?: string
+  /** centro Y da coroa (orientação inferior, sem flip) — usado p/ marcadores */
   crownCY: number
 }
 
 export const TOOTH_SHAPES: Record<ToothType, ToothShape> = {
   incisivo: {
-    crown: 'M10 26 L10 10 Q10 5 18 4 Q26 5 26 10 L26 26 Z',
-    roots: 'M12 26 C11 40 16 52 18 53 C20 52 25 40 24 26 Z',
-    crownCY: 15,
+    crown: 'M9 25 L9.5 12 C9.5 7 12 4 18 3.2 C24 4 26.5 7 26.5 12 L27 25 Z',
+    roots: 'M12 25 C11 37 14.5 49 18 52 C21.5 49 25 37 24 25 Z',
+    grooves: 'M14.5 8 L14.5 20 M21.5 8 L21.5 20',
+    crownCY: 14,
   },
   canino: {
-    crown: 'M10 26 L10 12 C10 6 14 3 18 2 C22 3 26 6 26 12 L26 26 Z',
-    roots: 'M11 26 C9 41 15 54 18 55 C21 54 27 41 25 26 Z',
-    crownCY: 15,
+    crown: 'M9.5 25 L10 13 C10 7 13.5 5 18 2.2 C22.5 5 26 7 26 13 L26.5 25 Z',
+    roots: 'M10.5 25 C8.5 40 15 54 18 55 C21 54 27.5 40 25.5 25 Z',
+    grooves: 'M18 5 L18 19',
+    crownCY: 14,
   },
   premolar: {
     crown:
-      'M8 26 L8 12 Q8 6 12 6 Q15 6 16 9 Q17 10 18 10 Q19 10 20 9 Q21 6 24 6 Q28 6 28 12 L28 26 Z',
-    roots: 'M11 26 C10 39 15 50 18 51 C21 50 26 39 25 26 Z',
-    crownCY: 16,
+      'M8 25 L8 12 C8 8 10.5 6.5 12.5 6.5 C14.5 6.5 15.5 8.5 18 8.5 C20.5 8.5 21.5 6.5 23.5 6.5 C25.5 6.5 28 8 28 12 L28 25 Z',
+    roots: 'M11 25 C10 37 15 48 18 49.5 C21 48 26 37 25 25 Z',
+    grooves: 'M18 9 L18 16 M12 12 L24 12',
+    crownCY: 15,
   },
   molar: {
     crown:
-      'M6 26 L6 13 Q6 7 10 6 Q12 6 13 9 Q14 10 16 10 Q17 9 18 9 Q19 9 20 10 Q22 10 23 9 Q24 6 26 6 Q30 7 30 13 L30 26 Z',
+      'M6 25 L6 12 C6 8 8.5 6.5 10.5 6.5 C12 6.5 12.5 8.5 14 8.5 C15.5 8.5 16 6.8 18 6.8 C20 6.8 20.5 8.5 22 8.5 C23.5 8.5 24 6.5 25.5 6.5 C27.5 6.5 30 8 30 12 L30 25 Z',
     roots:
-      'M9 26 C7 38 9 49 11 50 C13 49 13 38 13 27 Z M23 27 C23 38 23 49 25 50 C27 49 29 38 27 26 Z',
-    crownCY: 16,
+      'M10 25 C7 35 6 47 7.5 48 C9.5 47 12 36 13 26 Z M23 26 C24 36 26.5 47 28.5 48 C30 47 29 35 26 25 Z',
+    rootsUpper:
+      'M9 25 C6 34 4 45 5.5 46 C7.5 45 9.5 36 11 26 Z M16.5 25 C16 35 16 46 18 47 C20 46 20 35 19.5 25 Z M25 26 C26.5 36 30 45 31 46 C32.5 45 30 34 27 25 Z',
+    grooves: 'M10 12 L26 12 M18 8 L18 21',
+    crownCY: 15,
   },
 }
 
 interface StatusMeta {
   label: string
-  /** cor de preenchimento do dente */
+  /** cor de preenchimento da coroa */
   fill: string
   /** cor da borda */
   stroke: string
@@ -85,7 +102,7 @@ interface StatusMeta {
 }
 
 export const STATUS_META: Record<ToothStatus, StatusMeta> = {
-  saudavel: { label: 'Saudável', fill: '#ffffff', stroke: '#cbd5e1', dot: 'bg-white border border-slate-300' },
+  saudavel: { label: 'Saudável', fill: '#ffffff', stroke: '#94a3b8', dot: 'bg-white border border-slate-300' },
   carie: { label: 'Cárie', fill: '#fee2e2', stroke: '#ef4444', dot: 'bg-red-400' },
   restaurado: { label: 'Restaurado', fill: '#dbeafe', stroke: '#3b82f6', dot: 'bg-blue-400' },
   tratamento: { label: 'Em tratamento', fill: '#fef9c3', stroke: '#eab308', dot: 'bg-yellow-400' },

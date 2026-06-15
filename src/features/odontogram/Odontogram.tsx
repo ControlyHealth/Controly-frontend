@@ -60,7 +60,14 @@ export function Odontogram({ pacienteId }: { pacienteId: string }) {
             </div>
           </div>
 
-          <div className="border-t border-dashed border-slate-200" />
+          {/* faixa de gengiva */}
+          <div
+            className="h-5 rounded-full"
+            style={{
+              background:
+                'radial-gradient(60% 120% at 50% 50%, rgba(244,143,154,0.55), rgba(248,180,189,0.18) 70%, transparent 100%)',
+            }}
+          />
 
           {/* Arcada inferior */}
           <div>

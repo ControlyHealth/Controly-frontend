@@ -1,5 +1,13 @@
 import type { ToothRecord, OrtoMarker } from '@/types'
-import { STATUS_META, ORTO_META, TOOTH_SHAPES, toothType } from '@/data/teeth'
+import {
+  STATUS_META,
+  ORTO_META,
+  TOOTH_SHAPES,
+  toothType,
+  ROOT_FILL,
+  ROOT_STROKE,
+  GROOVE,
+} from '@/data/teeth'
 import { cn } from '@/lib/cn'
 
 /** Desenha o marcador ortodôntico sobre a coroa (em coordenadas de tela). */
@@ -10,9 +18,7 @@ function OrtoOverlay({ marker, cy }: { marker: OrtoMarker; cy: number }) {
     case 'bracket':
       return (
         <g>
-          {/* fio do aparelho */}
-          <line x1={3} y1={cy} x2={33} y2={cy} stroke={color} strokeWidth={1.5} />
-          {/* bráquete */}
+          <line x1={2} y1={cy} x2={34} y2={cy} stroke={color} strokeWidth={1.5} />
           <rect
             x={cx - 4}
             y={cy - 3.5}
@@ -28,19 +34,9 @@ function OrtoOverlay({ marker, cy }: { marker: OrtoMarker; cy: number }) {
       )
     case 'banda':
       return (
-        <rect
-          x={5}
-          y={cy - 4}
-          width={26}
-          height={8}
-          rx={2}
-          fill="none"
-          stroke={color}
-          strokeWidth={2}
-        />
+        <rect x={5} y={cy - 4} width={26} height={8} rx={2} fill="none" stroke={color} strokeWidth={2} />
       )
     case 'contencao':
-      // fio de contenção colado + pontos de fixação
       return (
         <g>
           <line
@@ -98,14 +94,15 @@ export function Tooth({
   const status = record?.status ?? 'saudavel'
   const orto = record?.orto ?? 'nenhum'
   const meta = STATUS_META[status]
-  const shape = TOOTH_SHAPES[toothType(numero)]
+  const type = toothType(numero)
+  const shape = TOOTH_SHAPES[type]
   const hasNote = !!record?.observacao?.trim()
   const ausente = status === 'ausente'
 
-  // A forma é desenhada com a coroa em cima. A arcada superior é espelhada
-  // verticalmente para que a raiz aponte para cima.
   const flip = arch === 'upper'
   const crownCY = flip ? 56 - shape.crownCY : shape.crownCY
+  // molares superiores têm 3 raízes
+  const roots = type === 'molar' && flip && shape.rootsUpper ? shape.rootsUpper : shape.roots
 
   return (
     <button
@@ -117,27 +114,38 @@ export function Tooth({
         selected ? 'bg-brand-100 ring-2 ring-brand-500' : 'hover:bg-slate-100',
       )}
     >
-      <svg width="30" height="46" viewBox="0 0 36 56" className="shrink-0">
+      <svg width="34" height="52" viewBox="0 0 36 56" className="shrink-0 drop-shadow-sm">
         <g transform={flip ? 'translate(0,56) scale(1,-1)' : undefined}>
-          {/* raízes */}
+          {/* raiz (dentina/cemento, creme) */}
           <path
-            d={shape.roots}
-            fill={ausente ? 'none' : meta.fill}
-            stroke={meta.stroke}
-            strokeWidth={1.6}
+            d={roots}
+            fill={ausente ? 'none' : ROOT_FILL}
+            stroke={ausente ? meta.stroke : ROOT_STROKE}
+            strokeWidth={1.4}
             strokeLinejoin="round"
             strokeDasharray={ausente ? '3 3' : undefined}
             opacity={ausente ? 0.5 : 1}
           />
-          {/* coroa */}
+          {/* coroa (esmalte) — recebe a cor da condição */}
           <path
             d={shape.crown}
             fill={meta.fill}
             stroke={meta.stroke}
-            strokeWidth={1.8}
+            strokeWidth={1.7}
             strokeLinejoin="round"
             strokeDasharray={ausente ? '3 3' : undefined}
           />
+          {/* sulcos da coroa */}
+          {!ausente && shape.grooves && (
+            <path
+              d={shape.grooves}
+              fill="none"
+              stroke={GROOVE}
+              strokeWidth={1}
+              strokeLinecap="round"
+              opacity={0.55}
+            />
+          )}
         </g>
         {/* marcador ortodôntico (sem flip, em coordenadas de tela) */}
         {orto !== 'nenhum' && !ausente && <OrtoOverlay marker={orto} cy={crownCY} />}
