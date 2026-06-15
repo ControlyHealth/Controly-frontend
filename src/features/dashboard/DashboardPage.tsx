@@ -1,10 +1,11 @@
 import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { Users, Bot, Activity, ArrowRight, Plus, Package } from 'lucide-react'
+import { Users, Bot, Activity, ArrowRight, Plus, Package, CalendarDays } from 'lucide-react'
 import { patientsService } from '@/services/patients'
 import { automationsService } from '@/services/automations'
 import { odontogramService } from '@/services/odontogram'
 import { stockService } from '@/services/stock'
+import { appointmentsService } from '@/services/appointments'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { initials, formatDate } from '@/lib/format'
@@ -13,6 +14,8 @@ export function DashboardPage() {
   const patients = useMemo(() => patientsService.list(), [])
   const automations = useMemo(() => automationsService.list(), [])
   const lowStock = useMemo(() => stockService.lowStock().length, [])
+  const hojeStr = new Date().toISOString().slice(0, 10)
+  const consultasHoje = useMemo(() => appointmentsService.countByDate(hojeStr), [hojeStr])
 
   const stats = useMemo(() => {
     const automacoesAtivas = automations.filter((a) => a.ativo).length
@@ -29,7 +32,8 @@ export function DashboardPage() {
   const recentes = patients.slice(0, 5)
 
   const cards = [
-    { label: 'Pacientes', value: patients.length, icon: Users, to: '/pacientes', color: 'bg-brand-50 text-brand-600' },
+    { label: 'Consultas hoje', value: consultasHoje, icon: CalendarDays, to: '/agenda', color: 'bg-brand-50 text-brand-600' },
+    { label: 'Pacientes', value: patients.length, icon: Users, to: '/pacientes', color: 'bg-slate-100 text-slate-600' },
     {
       label: lowStock > 0 ? 'Itens em estoque baixo' : 'Estoque em dia',
       value: lowStock,

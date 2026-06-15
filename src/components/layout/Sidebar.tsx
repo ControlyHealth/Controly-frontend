@@ -1,10 +1,11 @@
 import { NavLink } from 'react-router-dom'
-import { LayoutDashboard, Users, Bot, Activity, Package } from 'lucide-react'
+import { LayoutDashboard, Users, Bot, Activity, Package, CalendarDays } from 'lucide-react'
 import { cn } from '@/lib/cn'
 
 const links = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
   { to: '/pacientes', label: 'Pacientes', icon: Users, end: false },
+  { to: '/agenda', label: 'Agenda', icon: CalendarDays, end: false },
   { to: '/estoque', label: 'Estoque', icon: Package, end: false },
   { to: '/automacoes', label: 'Automações', icon: Bot, end: false },
 ]

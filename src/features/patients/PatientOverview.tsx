@@ -43,6 +43,7 @@ export function PatientOverview({
     const porStatus: Record<ToothStatus, number> = {
       saudavel: 0,
       carie: 0,
+      lesao_nao_cariosa: 0,
       restaurado: 0,
       tratamento: 0,
       ausente: 0,

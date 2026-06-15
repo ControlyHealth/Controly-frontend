@@ -102,8 +102,9 @@ interface StatusMeta {
 }
 
 export const STATUS_META: Record<ToothStatus, StatusMeta> = {
-  saudavel: { label: 'Saudável', fill: '#ffffff', stroke: '#94a3b8', dot: 'bg-white border border-slate-300' },
+  saudavel: { label: 'Hígido', fill: '#ffffff', stroke: '#94a3b8', dot: 'bg-white border border-slate-300' },
   carie: { label: 'Cárie', fill: '#fee2e2', stroke: '#ef4444', dot: 'bg-red-400' },
+  lesao_nao_cariosa: { label: 'Lesão não cariosa', fill: '#ffedd5', stroke: '#f97316', dot: 'bg-orange-400' },
   restaurado: { label: 'Restaurado', fill: '#dbeafe', stroke: '#3b82f6', dot: 'bg-blue-400' },
   tratamento: { label: 'Em tratamento', fill: '#fef9c3', stroke: '#eab308', dot: 'bg-yellow-400' },
   ausente: { label: 'Ausente', fill: '#f1f5f9', stroke: '#94a3b8', dot: 'bg-slate-300' },
@@ -113,6 +114,7 @@ export const STATUS_META: Record<ToothStatus, StatusMeta> = {
 export const STATUS_ORDER: ToothStatus[] = [
   'saudavel',
   'carie',
+  'lesao_nao_cariosa',
   'restaurado',
   'tratamento',
   'ausente',

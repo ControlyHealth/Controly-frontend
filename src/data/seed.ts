@@ -1,4 +1,4 @@
-import type { Patient, Automation, StockItem } from '@/types'
+import type { Patient, Automation, StockItem, Appointment } from '@/types'
 
 const now = new Date().toISOString()
 
@@ -112,6 +112,76 @@ export const SEED_AUTOMATIONS: Automation[] = [
     mensagem:
       'Olá {{nome}}! Já faz 6 meses desde sua última visita. Que tal agendar sua limpeza e avaliação? Responda aqui que cuidamos do resto. 🪥',
     ativo: false,
+    criadoEm: now,
+    atualizadoEm: now,
+  },
+]
+
+/** datas relativas a hoje para a agenda já vir com exemplos */
+function ymd(offsetDias: number): string {
+  const d = new Date()
+  d.setDate(d.getDate() + offsetDias)
+  return d.toISOString().slice(0, 10)
+}
+
+export const SEED_APPOINTMENTS: Appointment[] = [
+  {
+    id: 'seed-appt-1',
+    pacienteId: 'seed-ana',
+    data: ymd(0),
+    inicio: '09:00',
+    fim: '09:45',
+    procedimento: 'Limpeza e profilaxia',
+    status: 'confirmado',
+    observacao: '',
+    criadoEm: now,
+    atualizadoEm: now,
+  },
+  {
+    id: 'seed-appt-2',
+    pacienteId: 'seed-carlos',
+    data: ymd(0),
+    inicio: '10:30',
+    fim: '11:30',
+    procedimento: 'Restauração dente 36',
+    status: 'agendado',
+    observacao: '',
+    criadoEm: now,
+    atualizadoEm: now,
+  },
+  {
+    id: 'seed-appt-3',
+    pacienteId: 'seed-ana',
+    data: ymd(0),
+    inicio: '14:00',
+    fim: '14:30',
+    procedimento: 'Ajuste de aparelho',
+    status: 'agendado',
+    observacao: '',
+    criadoEm: now,
+    atualizadoEm: now,
+  },
+  {
+    id: 'seed-appt-4',
+    pacienteId: 'seed-carlos',
+    data: ymd(1),
+    inicio: '08:30',
+    fim: '09:15',
+    procedimento: 'Avaliação inicial',
+    status: 'agendado',
+    observacao: '',
+    criadoEm: now,
+    atualizadoEm: now,
+  },
+  {
+    id: 'seed-appt-5',
+    pacienteId: 'seed-ana',
+    data: ymd(2),
+    inicio: '11:00',
+    fim: '11:45',
+    procedimento: 'Retorno ortodôntico',
+    status: 'agendado',
+    observacao: '',
     criadoEm: now,
     atualizadoEm: now,
   },

@@ -15,6 +15,7 @@ export interface Patient {
 export type ToothStatus =
   | 'saudavel'
   | 'carie'
+  | 'lesao_nao_cariosa'
   | 'restaurado'
   | 'tratamento'
   | 'ausente'
@@ -131,6 +132,27 @@ export interface Automation {
   canal: AutomationChannel
   mensagem: string
   ativo: boolean
+  criadoEm: string
+  atualizadoEm: string
+}
+
+/** ----- Agenda / Consultas ----- */
+export type AppointmentStatus =
+  | 'agendado'
+  | 'confirmado'
+  | 'atendido'
+  | 'faltou'
+  | 'cancelado'
+
+export interface Appointment {
+  id: ID
+  pacienteId: ID
+  data: string // YYYY-MM-DD
+  inicio: string // HH:MM
+  fim: string // HH:MM
+  procedimento?: string
+  status: AppointmentStatus
+  observacao?: string
   criadoEm: string
   atualizadoEm: string
 }

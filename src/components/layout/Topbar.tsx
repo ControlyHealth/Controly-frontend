@@ -3,6 +3,7 @@ import { useLocation, Link } from 'react-router-dom'
 const titles: Record<string, string> = {
   '/': 'Dashboard',
   '/pacientes': 'Pacientes',
+  '/agenda': 'Agenda',
   '/estoque': 'Gerenciamento de estoque',
   '/automacoes': 'Automações via WhatsApp',
 }
