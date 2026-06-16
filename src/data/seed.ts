@@ -1,4 +1,4 @@
-import type { Patient, Automation, StockItem, Appointment } from '@/types'
+import type { Patient, Automation, StockItem, Appointment, Transaction, Orcamento } from '@/types'
 
 const now = new Date().toISOString()
 
@@ -182,6 +182,75 @@ export const SEED_APPOINTMENTS: Appointment[] = [
     procedimento: 'Retorno ortodôntico',
     status: 'agendado',
     observacao: '',
+    criadoEm: now,
+    atualizadoEm: now,
+  },
+]
+
+export const SEED_TRANSACTIONS: Transaction[] = [
+  {
+    id: 'seed-tx-1',
+    tipo: 'receita',
+    descricao: 'Limpeza e profilaxia',
+    valor: 180,
+    categoria: 'procedimento',
+    status: 'pago',
+    metodo: 'pix',
+    data: ymd(-2),
+    pacienteId: 'seed-ana',
+    criadoEm: now,
+    atualizadoEm: now,
+  },
+  {
+    id: 'seed-tx-2',
+    tipo: 'receita',
+    descricao: 'Restauração dente 36',
+    valor: 350,
+    categoria: 'procedimento',
+    status: 'pendente',
+    data: ymd(-1),
+    vencimento: ymd(5),
+    pacienteId: 'seed-carlos',
+    criadoEm: now,
+    atualizadoEm: now,
+  },
+  {
+    id: 'seed-tx-3',
+    tipo: 'despesa',
+    descricao: 'Compra de luvas e descartáveis',
+    valor: 240,
+    categoria: 'material',
+    status: 'pago',
+    metodo: 'boleto',
+    data: ymd(-3),
+    criadoEm: now,
+    atualizadoEm: now,
+  },
+  {
+    id: 'seed-tx-4',
+    tipo: 'despesa',
+    descricao: 'Aluguel do consultório',
+    valor: 2200,
+    categoria: 'aluguel',
+    status: 'pendente',
+    data: ymd(-5),
+    vencimento: ymd(4),
+    criadoEm: now,
+    atualizadoEm: now,
+  },
+]
+
+export const SEED_ORCAMENTOS: Orcamento[] = [
+  {
+    id: 'seed-orc-1',
+    pacienteId: 'seed-carlos',
+    itens: [
+      { descricao: 'Restauração em resina', dente: 36, quantidade: 1, valorUnitario: 350 },
+      { descricao: 'Clareamento dental', quantidade: 1, valorUnitario: 800 },
+    ],
+    desconto: 50,
+    status: 'rascunho',
+    observacao: 'Paciente avaliando opção de parcelamento.',
     criadoEm: now,
     atualizadoEm: now,
   },

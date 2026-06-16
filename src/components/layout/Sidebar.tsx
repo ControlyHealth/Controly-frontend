@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, Users, Bot, Package, CalendarDays, LogOut, ChevronUp } from 'lucide-react'
+import { LayoutDashboard, Users, Bot, Package, CalendarDays, Wallet, LogOut, ChevronUp } from 'lucide-react'
 import Logo from "../../assets/favicon.png"
 import { userService } from '@/services/user'
 import { initials } from '@/lib/format'
@@ -11,6 +11,7 @@ const links = [
   { to: '/pacientes', label: 'Pacientes', icon: Users, end: false },
   { to: '/agenda', label: 'Agenda', icon: CalendarDays, end: false },
   { to: '/estoque', label: 'Estoque', icon: Package, end: false },
+  { to: '/financas', label: 'Finanças', icon: Wallet, end: false },
   { to: '/automacoes', label: 'Automações', icon: Bot, end: false },
 ]
 

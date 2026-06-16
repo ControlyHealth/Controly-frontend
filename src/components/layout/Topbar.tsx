@@ -5,6 +5,7 @@ const titles: Record<string, string> = {
   '/pacientes': 'Pacientes',
   '/agenda': 'Agenda',
   '/estoque': 'Gerenciamento de estoque',
+  '/financas': 'Finanças',
   '/automacoes': 'Automações via WhatsApp',
 }
 

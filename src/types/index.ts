@@ -166,3 +166,65 @@ export interface Appointment {
   criadoEm: string
   atualizadoEm: string
 }
+
+/** ----- Financeiro ----- */
+export type TransactionType = 'receita' | 'despesa'
+export type TransactionStatus = 'pago' | 'pendente'
+
+export type PaymentMethod =
+  | 'dinheiro'
+  | 'pix'
+  | 'cartao_credito'
+  | 'cartao_debito'
+  | 'transferencia'
+  | 'boleto'
+  | 'convenio'
+
+export type FinanceCategory =
+  | 'procedimento'
+  | 'produto'
+  | 'material'
+  | 'salario'
+  | 'aluguel'
+  | 'equipamento'
+  | 'imposto'
+  | 'marketing'
+  | 'outro'
+
+export interface Transaction {
+  id: ID
+  tipo: TransactionType
+  descricao: string
+  valor: number
+  categoria: FinanceCategory
+  status: TransactionStatus
+  metodo?: PaymentMethod
+  data: string // YYYY-MM-DD
+  vencimento?: string // YYYY-MM-DD (para pendentes)
+  pacienteId?: ID
+  orcamentoId?: ID
+  observacao?: string
+  criadoEm: string
+  atualizadoEm: string
+}
+
+/** ----- Orçamentos / Plano de tratamento ----- */
+export type OrcamentoStatus = 'rascunho' | 'aprovado' | 'recusado' | 'concluido'
+
+export interface OrcamentoItem {
+  descricao: string
+  dente?: number
+  quantidade: number
+  valorUnitario: number
+}
+
+export interface Orcamento {
+  id: ID
+  pacienteId: ID
+  itens: OrcamentoItem[]
+  desconto?: number
+  status: OrcamentoStatus
+  observacao?: string
+  criadoEm: string
+  atualizadoEm: string
+}
