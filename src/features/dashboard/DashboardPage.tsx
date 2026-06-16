@@ -6,11 +6,23 @@ import { automationsService } from '@/services/automations'
 import { odontogramService } from '@/services/odontogram'
 import { stockService } from '@/services/stock'
 import { appointmentsService } from '@/services/appointments'
+import { userService } from '@/services/user'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { initials, formatDate } from '@/lib/format'
 
 export function DashboardPage() {
+  const user = useMemo(() => userService.current(), [])
+
+  // Se o usuário existir mostra o nome; senão retorna null (nada é exibido).
+  function renderSaudacao() {
+    if (user) {
+      return <h2 className="text-xl font-bold text-slate-800">Bem-vindo, {user.nome}</h2>
+    } else {
+      return null
+    }
+  }
+
   const patients = useMemo(() => patientsService.list(), [])
   const automations = useMemo(() => automationsService.list(), [])
   const lowStock = useMemo(() => stockService.lowStock().length, [])
@@ -33,23 +45,23 @@ export function DashboardPage() {
 
   const cards = [
     { label: 'Consultas hoje', value: consultasHoje, icon: CalendarDays, to: '/agenda', color: 'bg-brand-50 text-brand-600' },
-    { label: 'Pacientes', value: patients.length, icon: Users, to: '/pacientes', color: 'bg-slate-100 text-slate-600' },
+    { label: 'Pacientes', value: patients.length, icon: Users, to: '/pacientes', color: 'bg-brand-50 text-brand-600' },
     {
       label: lowStock > 0 ? 'Itens em estoque baixo' : 'Estoque em dia',
       value: lowStock,
       icon: Package,
       to: '/estoque',
-      color: lowStock > 0 ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-600',
+      color: lowStock > 0 ? 'bg-brand-50 text-brand-600' : 'bg-brand-50 text-brand-600',
     },
     { label: 'Automações ativas', value: stats.automacoesAtivas, icon: Bot, to: '/automacoes', color: 'bg-brand-50 text-brand-600' },
-    { label: 'Registros no odontograma', value: stats.dentesMarcados, icon: Activity, to: '/pacientes', color: 'bg-amber-50 text-amber-600' },
+    { label: 'Registros no odontograma', value: stats.dentesMarcados, icon: Activity, to: '/pacientes', color: 'bg-brand-50 text-brand-600' },
   ]
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-xl font-bold text-slate-800">Bem-vindo à Controly 👋</h2>
+          {renderSaudacao()}
           <p className="text-sm text-slate-500">Visão geral da sua clínica odontológica</p>
         </div>
         <Link to="/pacientes">

@@ -6,11 +6,18 @@ import { PatientDetailPage } from '@/features/patients/PatientDetailPage'
 import { AutomationsPage } from '@/features/automations/AutomationsPage'
 import { StockPage } from '@/features/stock/StockPage'
 import { AgendaPage } from '@/features/agenda/AgendaPage'
+import { LoginPage } from '@/features/auth/LoginPage'
+import { RequireAuth } from '@/features/auth/RequireAuth'
 
 export const router = createBrowserRouter([
+  { path: '/login', element: <LoginPage /> },
   {
     path: '/',
-    element: <AppLayout />,
+    element: (
+      <RequireAuth>
+        <AppLayout />
+      </RequireAuth>
+    ),
     children: [
       { index: true, element: <DashboardPage /> },
       { path: 'pacientes', element: <PatientsPage /> },

@@ -1,5 +1,14 @@
 export type ID = string
 
+/** ----- Usuário / Profissional logado ----- */
+export interface User {
+  id: ID
+  nome: string
+  email?: string
+  clinica?: string
+  cargo?: string
+}
+
 export interface Patient {
   id: ID
   nome: string
@@ -141,6 +150,7 @@ export type AppointmentStatus =
   | 'agendado'
   | 'confirmado'
   | 'atendido'
+  | 'atrasado'
   | 'faltou'
   | 'cancelado'
 

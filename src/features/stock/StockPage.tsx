@@ -9,7 +9,7 @@ import { Modal } from '@/components/ui/Modal'
 import { Badge } from '@/components/ui/Badge'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { StockForm, CATEGORY_LABEL } from './StockForm'
-import { formatDate } from '@/lib/format'
+import { formatDate, pluralizar } from '@/lib/format'
 import { cn } from '@/lib/cn'
 
 function isExpiringSoon(validade?: string): boolean {
@@ -152,7 +152,7 @@ export function StockPage() {
                     <td className="px-4 py-3">
                       <p className="font-medium text-slate-800">{i.nome}</p>
                       <p className="text-xs text-slate-400">
-                        {i.fornecedor ? i.fornecedor + ' · ' : ''}mín. {i.minimo} {i.unidade}
+                        {i.fornecedor ? i.fornecedor + ' · ' : ''}mín. {i.minimo} {pluralizar(i.minimo, i.unidade)}
                       </p>
                     </td>
                     <td className="px-4 py-3 text-slate-600">{CATEGORY_LABEL[i.categoria]}</td>
@@ -186,7 +186,7 @@ export function StockPage() {
                             low ? 'bg-red-100 text-red-700' : 'bg-slate-100 text-slate-700',
                           )}
                         >
-                          {i.quantidade} {i.unidade}
+                          {i.quantidade} {pluralizar(i.quantidade, i.unidade)}
                         </Badge>
                         <button
                           type="button"

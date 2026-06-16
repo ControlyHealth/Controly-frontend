@@ -17,3 +17,11 @@ export function writeStore<T>(key: string, value: T): void {
     /* ignore */
   }
 }
+
+export function removeStore(key: string): void {
+  try {
+    localStorage.removeItem(PREFIX + key)
+  } catch {
+    /* ignore */
+  }
+}

@@ -9,6 +9,7 @@ export const APPT_STATUS_LABEL: Record<AppointmentStatus, string> = {
   agendado: 'Agendado',
   confirmado: 'Confirmado',
   atendido: 'Atendido',
+  atrasado: 'Atrasado',
   faltou: 'Faltou',
   cancelado: 'Cancelado',
 }
