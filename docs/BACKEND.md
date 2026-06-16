@@ -205,13 +205,83 @@ Infra necessária: fila de jobs (BullMQ/Sidekiq/Celery), worker agendado, webhoo
 
 ---
 
-## 9. Dashboard / Indicadores
+## 9. Finanças
+
+Espelha `financeService` (lançamentos + resumo) e `orcamentosService` (orçamentos). Cobre três frentes: lançamentos (receitas/despesas), contas a receber e orçamentos / plano de tratamento.
+
+### 9.1 Lançamentos (receitas e despesas)
+
+Features:
+
+- CRUD de lançamentos (receita ou despesa).
+- Filtro por tipo (receita/despesa), categoria, status e período.
+- Marcar como pago/recebido (mudança rápida de status — já existe no front).
+- Vínculo opcional com paciente (e com orçamento).
+- Resumo consolidado: total recebido, a receber, despesas pagas/pendentes e saldo.
+- (Futuro) relatórios por período, fluxo de caixa e DRE simples.
+
+| Método | Rota | Descrição |
+|--------|------|-----------|
+| GET | `/transactions?type=&status=&from=&to=` | Lista/filtra |
+| POST | `/transactions` | Cria |
+| PATCH | `/transactions/:id` | Atualiza |
+| PATCH | `/transactions/:id/status` | Marca pago/pendente |
+| DELETE | `/transactions/:id` | Exclui |
+| GET | `/finance/summary?from=&to=` | Totais consolidados |
+
+Tipo: `receita`, `despesa`. Situação: `pago`, `pendente`. Formas: `dinheiro`, `pix`, `cartao_credito`, `cartao_debito`, `transferencia`, `boleto`, `convenio`. Categorias: `procedimento`, `produto`, `material`, `salario`, `aluguel`, `equipamento`, `imposto`, `marketing`, `outro`.
+
+### 9.2 Contas a receber
+
+Deriva das receitas com status `pendente`.
+
+Features:
+
+- Listar receitas pendentes ordenadas por vencimento.
+- Destacar títulos atrasados (vencimento < hoje).
+- Receber (baixar) um título → muda status para pago.
+- (Futuro) parcelamento, lembrete de cobrança automática (integra com automações), juros/multa.
+
+| Método | Rota | Descrição |
+|--------|------|-----------|
+| GET | `/receivables` | Receitas pendentes |
+| PATCH | `/transactions/:id/status` | Receber (status = pago) |
+
+### 9.3 Orçamentos / Plano de tratamento
+
+Espelha `orcamentosService`.
+
+Features:
+
+- CRUD de orçamentos por paciente, com itens (descrição, dente, quantidade, valor unitário) e desconto.
+- Cálculo de total no servidor (não confiar só no front).
+- Aprovar orçamento → **gera automaticamente uma conta a receber** (receita pendente) vinculada, evitando duplicidade.
+- Mudança de status (rascunho → aprovado → concluído / recusado).
+- (Futuro) gerar PDF do orçamento para o paciente assinar.
+
+| Método | Rota | Descrição |
+|--------|------|-----------|
+| GET | `/budgets?patientId=` | Lista (por paciente) |
+| GET | `/budgets/:id` | Detalhe |
+| POST | `/budgets` | Cria |
+| PATCH | `/budgets/:id` | Atualiza |
+| POST | `/budgets/:id/approve` | Aprova e gera receita |
+| DELETE | `/budgets/:id` | Exclui |
+
+Status: `rascunho`, `aprovado`, `recusado`, `concluido`.
+
+Regra de negócio importante: ao aprovar, criar a transação vinculada (`orcamentoId`) em uma única operação (idealmente transacional no banco) e não duplicar se já houver lançamento para aquele orçamento.
+
+---
+
+## 10. Dashboard / Indicadores
 
 A tela inicial agrega dados de vários domínios. Vale um endpoint consolidado para evitar várias chamadas.
 
 Features:
 
 - Consultas de hoje, total de pacientes, itens em estoque baixo, automações ativas, registros no odontograma.
+- Indicadores financeiros (saldo, a receber) — opcional no card do dashboard.
 - Lista de pacientes recentes.
 
 | Método | Rota | Descrição |
@@ -220,7 +290,7 @@ Features:
 
 ---
 
-## 10. Requisitos transversais (infraestrutura)
+## 11. Requisitos transversais (infraestrutura)
 
 Itens que não são de um domínio só, mas precisam existir:
 
@@ -243,8 +313,8 @@ Itens que não são de um domínio só, mas precisam existir:
 
 ## Resumo por prioridade
 
-Fase 1 (MVP — paridade com o front): Auth real, Pacientes, Odontograma, Ortodontia, Agenda, Estoque, Radiografias (com storage), Dashboard.
+Fase 1 (MVP — paridade com o front): Auth real, Pacientes, Odontograma, Ortodontia, Agenda, Estoque, Radiografias (com storage), Finanças (lançamentos + contas a receber + orçamentos), Dashboard.
 
-Fase 2 (diferencial): Motor de automações + WhatsApp, lembretes agendados, logs de envio, auditoria, laudo em PDF.
+Fase 2 (diferencial): Motor de automações + WhatsApp, lembretes agendados, logs de envio, auditoria, laudo/orçamento em PDF, relatórios financeiros (fluxo de caixa).
 
-Fase 3 (escala/compliance): multi-tenant robusto, papéis/permissões, LGPD completa, relatórios e histórico de movimentações.
+Fase 3 (escala/compliance): multi-tenant robusto, papéis/permissões, LGPD completa, relatórios avançados e histórico de movimentações (estoque e financeiro).
