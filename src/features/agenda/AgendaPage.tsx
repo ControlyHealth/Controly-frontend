@@ -17,6 +17,7 @@ import { patientsService } from '@/services/patients'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { AppointmentForm, APPT_STATUS_LABEL } from './AppointmentForm'
 import { initials } from '@/lib/format'
@@ -62,6 +63,7 @@ export function AgendaPage() {
   const [modalOpen, setModalOpen] = useState(false)
   const [editing, setEditing] = useState<Appointment | undefined>(undefined)
   const [statusMenu, setStatusMenu] = useState<string | null>(null)
+  const [toDelete, setToDelete] = useState<Appointment | undefined>(undefined)
   const [version, setVersion] = useState(0)
 
   const weekStart = startOfWeek(selected)
@@ -94,9 +96,10 @@ export function AgendaPage() {
     refresh()
   }
 
-  function handleDelete(a: Appointment) {
-    if (confirm('Excluir esta consulta?')) {
-      appointmentsService.remove(a.id)
+  function confirmDelete() {
+    if (toDelete) {
+      appointmentsService.remove(toDelete.id)
+      setToDelete(undefined)
       setVersion((v) => v + 1)
     }
   }
@@ -357,7 +360,7 @@ export function AgendaPage() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => handleDelete(a)}
+                      onClick={() => setToDelete(a)}
                       className="rounded-lg p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600 cursor-pointer"
                       aria-label="Excluir"
                     >
@@ -390,6 +393,15 @@ export function AgendaPage() {
           }}
         />
       </Modal>
+
+      <ConfirmDialog
+        open={!!toDelete}
+        title="Excluir consulta"
+        description="Tem certeza que deseja excluir esta consulta? Esta ação não pode ser desfeita."
+        confirmLabel="Excluir"
+        onConfirm={confirmDelete}
+        onClose={() => setToDelete(undefined)}
+      />
     </div>
   )
 }

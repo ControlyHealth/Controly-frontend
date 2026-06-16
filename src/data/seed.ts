@@ -88,7 +88,7 @@ export const SEED_AUTOMATIONS: Automation[] = [
     gatilho: 'lembrete_24h',
     canal: 'whatsapp',
     mensagem:
-      'Olá {{nome}}! 😁 Passando para lembrar da sua consulta amanhã às {{horario}} na Clínica Controly. Posso confirmar sua presença?',
+      'Olá {{nome}}! Passando para lembrar da sua consulta amanhã às {{horario}} na Clínica Controly. Posso confirmar sua presença?',
     ativo: true,
     criadoEm: now,
     atualizadoEm: now,
@@ -99,7 +99,7 @@ export const SEED_AUTOMATIONS: Automation[] = [
     gatilho: 'pos_consulta',
     canal: 'whatsapp',
     mensagem:
-      'Oi {{nome}}, tudo bem? Como você está se sentindo após o procedimento de hoje? Qualquer dúvida estamos à disposição. 🦷',
+      'Oi {{nome}}, tudo bem? Como você está se sentindo após o procedimento de hoje? Qualquer dúvida estamos à disposição.',
     ativo: true,
     criadoEm: now,
     atualizadoEm: now,
@@ -110,7 +110,7 @@ export const SEED_AUTOMATIONS: Automation[] = [
     gatilho: 'retorno_periodico',
     canal: 'whatsapp',
     mensagem:
-      'Olá {{nome}}! Já faz 6 meses desde sua última visita. Que tal agendar sua limpeza e avaliação? Responda aqui que cuidamos do resto. 🪥',
+      'Olá {{nome}}! Já faz 6 meses desde sua última visita. Que tal agendar sua limpeza e avaliação? Responda aqui que cuidamos do resto.',
     ativo: false,
     criadoEm: now,
     atualizadoEm: now,

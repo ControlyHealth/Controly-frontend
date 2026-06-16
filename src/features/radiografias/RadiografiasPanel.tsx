@@ -5,6 +5,7 @@ import { radiografiasService } from '@/services/radiografias'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { Field, Select, Textarea } from '@/components/ui/Input'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { formatDate } from '@/lib/format'
@@ -170,6 +171,7 @@ export function RadiografiasPanel({ pacienteId }: { pacienteId: string }) {
   const [open, setOpen] = useState(false)
   const [, force] = useState(0)
   const [preview, setPreview] = useState<Radiografia | null>(null)
+  const [toDelete, setToDelete] = useState<Radiografia | null>(null)
   const lista = radiografiasService.list(pacienteId)
 
   function refresh() {
@@ -177,9 +179,10 @@ export function RadiografiasPanel({ pacienteId }: { pacienteId: string }) {
     force((n) => n + 1)
   }
 
-  function handleRemove(id: string) {
-    if (confirm('Excluir esta radiografia?')) {
-      radiografiasService.remove(pacienteId, id)
+  function confirmDelete() {
+    if (toDelete) {
+      radiografiasService.remove(pacienteId, toDelete.id)
+      setToDelete(null)
       force((n) => n + 1)
     }
   }
@@ -234,7 +237,7 @@ export function RadiografiasPanel({ pacienteId }: { pacienteId: string }) {
                   </div>
                   <button
                     type="button"
-                    onClick={() => handleRemove(r.id)}
+                    onClick={() => setToDelete(r)}
                     className="rounded-lg p-1 text-slate-400 hover:bg-red-50 hover:text-red-600 cursor-pointer"
                     aria-label="Excluir"
                   >
@@ -263,6 +266,15 @@ export function RadiografiasPanel({ pacienteId }: { pacienteId: string }) {
         )}
         {preview?.observacao && <p className="mt-3 text-sm text-slate-600">{preview.observacao}</p>}
       </Modal>
+
+      <ConfirmDialog
+        open={!!toDelete}
+        title="Excluir radiografia"
+        description="Tem certeza que deseja excluir esta radiografia?"
+        confirmLabel="Excluir"
+        onConfirm={confirmDelete}
+        onClose={() => setToDelete(null)}
+      />
     </div>
   )
 }

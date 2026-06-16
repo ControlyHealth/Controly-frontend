@@ -4,17 +4,17 @@ import {
   Mail,
   Calendar,
   IdCard,
-  Stethoscope,
   ImageIcon,
   Braces,
   CircleAlert,
 } from 'lucide-react'
-import type { Patient, ToothStatus, OrtoMarker } from '@/types'
+import type { Patient, OrtoMarker } from '@/types'
 import { odontogramService } from '@/services/odontogram'
 import { radiografiasService } from '@/services/radiografias'
 import { orthoService } from '@/services/ortho'
-import { STATUS_META, STATUS_ORDER, ORTO_META, ORTO_ORDER } from '@/data/teeth'
+import { ORTO_META, ORTO_ORDER } from '@/data/teeth'
 import { ORTHO_STATUS_LABEL, APPLIANCE_LABEL } from '@/features/ortho/OrthoPanel'
+import { OdontogramaResumo } from '@/features/odontogram/OdontogramaResumo'
 import { Card } from '@/components/ui/Card'
 import { formatDate } from '@/lib/format'
 import { cn } from '@/lib/cn'
@@ -39,16 +39,6 @@ export function PatientOverview({
 }) {
   const resumo = useMemo(() => {
     const chart = odontogramService.get(patient.id)
-    const dentes = Object.values(chart.dentes)
-    const porStatus: Record<ToothStatus, number> = {
-      saudavel: 0,
-      carie: 0,
-      lesao_nao_cariosa: 0,
-      restaurado: 0,
-      tratamento: 0,
-      ausente: 0,
-      implante: 0,
-    }
     const porOrto: Record<OrtoMarker, number> = {
       nenhum: 0,
       bracket: 0,
@@ -57,19 +47,16 @@ export function PatientOverview({
       extracao: 0,
       alinhador: 0,
     }
-    for (const d of dentes) {
-      porStatus[d.status]++
+    for (const d of Object.values(chart.dentes)) {
       porOrto[d.orto ?? 'nenhum']++
     }
-    const comOrto = dentes.length - porOrto.nenhum
-    return { porStatus, porOrto, comOrto }
+    return { porOrto }
   }, [patient.id])
 
   const radiografias = radiografiasService.count(patient.id)
   const ortho = orthoService.get(patient.id)
   const anos = idade(patient.dataNascimento)
 
-  const condicoes = STATUS_ORDER.filter((s) => s !== 'saudavel' && resumo.porStatus[s] > 0)
   const marcacoes = ORTO_ORDER.filter((m) => resumo.porOrto[m] > 0)
 
   return (
@@ -110,35 +97,10 @@ export function PatientOverview({
 
       {/* Resumo clínico */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:col-span-2">
-        {/* Odontograma */}
-        <Card className="p-5">
-          <button
-            type="button"
-            onClick={() => onGoto('odontograma')}
-            className="mb-3 flex w-full items-center gap-2 text-left cursor-pointer"
-          >
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-50 text-amber-600">
-              <Stethoscope size={16} />
-            </span>
-            <h3 className="text-sm font-semibold text-slate-800">Odontograma</h3>
-          </button>
-          {condicoes.length === 0 ? (
-            <p className="text-sm text-slate-400">Sem condições registradas — arcada saudável.</p>
-          ) : (
-            <div className="flex flex-wrap gap-1.5">
-              {condicoes.map((s) => (
-                <span
-                  key={s}
-                  className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium"
-                  style={{ backgroundColor: STATUS_META[s].fill, color: STATUS_META[s].stroke }}
-                >
-                  <span className={cn('h-2 w-2 rounded-full', STATUS_META[s].dot)} />
-                  {STATUS_META[s].label}: {resumo.porStatus[s]}
-                </span>
-              ))}
-            </div>
-          )}
-        </Card>
+        {/* Odontograma — resumo geral */}
+        <div className="sm:col-span-2">
+          <OdontogramaResumo pacienteId={patient.id} onOpen={() => onGoto('odontograma')} />
+        </div>
 
         {/* Ortodontia */}
         <Card className="p-5">

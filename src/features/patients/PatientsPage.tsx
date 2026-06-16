@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Input } from '@/components/ui/Input'
 import { Modal } from '@/components/ui/Modal'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { PatientForm } from './PatientForm'
 import { formatDate, initials } from '@/lib/format'
@@ -16,6 +17,7 @@ export function PatientsPage() {
   const [query, setQuery] = useState('')
   const [modalOpen, setModalOpen] = useState(false)
   const [editing, setEditing] = useState<Patient | undefined>(undefined)
+  const [toDelete, setToDelete] = useState<Patient | undefined>(undefined)
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -41,9 +43,10 @@ export function PatientsPage() {
     refresh()
   }
 
-  function handleDelete(p: Patient) {
-    if (confirm(`Remover o paciente "${p.nome}"? Esta ação não pode ser desfeita.`)) {
-      patientsService.remove(p.id)
+  function confirmDelete() {
+    if (toDelete) {
+      patientsService.remove(toDelete.id)
+      setToDelete(undefined)
       refresh()
     }
   }
@@ -128,7 +131,7 @@ export function PatientsPage() {
                 <Button variant="ghost" size="sm" onClick={() => openEdit(p)} aria-label="Editar">
                   <Pencil size={15} />
                 </Button>
-                <Button variant="ghost" size="sm" onClick={() => handleDelete(p)} aria-label="Remover">
+                <Button variant="ghost" size="sm" onClick={() => setToDelete(p)} aria-label="Remover">
                   <Trash2 size={15} className="text-red-500" />
                 </Button>
               </div>
@@ -155,6 +158,19 @@ export function PatientsPage() {
           }}
         />
       </Modal>
+
+      <ConfirmDialog
+        open={!!toDelete}
+        title="Remover paciente"
+        description={
+          <>
+            Remover o paciente <strong>{toDelete?.nome}</strong>? Esta ação não pode ser desfeita.
+          </>
+        }
+        confirmLabel="Remover"
+        onConfirm={confirmDelete}
+        onClose={() => setToDelete(undefined)}
+      />
     </div>
   )
 }

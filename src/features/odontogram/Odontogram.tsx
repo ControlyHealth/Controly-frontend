@@ -4,7 +4,8 @@ import { UPPER_ARCH, LOWER_ARCH } from '@/data/teeth'
 import { odontogramService } from '@/services/odontogram'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
-import { RotateCcw } from 'lucide-react'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+import { RotateCcw, MousePointerClick } from 'lucide-react'
 import { Tooth } from './Tooth'
 import { ToothPanel } from './ToothPanel'
 import { Legend } from './Legend'
@@ -12,6 +13,7 @@ import { Legend } from './Legend'
 export function Odontogram({ pacienteId }: { pacienteId: string }) {
   const [chart, setChart] = useState<Odontograma>(() => odontogramService.get(pacienteId))
   const [selected, setSelected] = useState<number | null>(null)
+  const [confirmReset, setConfirmReset] = useState(false)
 
   function handleSave(
     numero: number,
@@ -23,10 +25,9 @@ export function Odontogram({ pacienteId }: { pacienteId: string }) {
   }
 
   function handleReset() {
-    if (confirm('Reiniciar o odontograma deste paciente? Todas as marcações serão apagadas.')) {
-      setChart(odontogramService.reset(pacienteId))
-      setSelected(null)
-    }
+    setChart(odontogramService.reset(pacienteId))
+    setSelected(null)
+    setConfirmReset(false)
   }
 
   return (
@@ -34,7 +35,7 @@ export function Odontogram({ pacienteId }: { pacienteId: string }) {
       <Card className="p-5 lg:col-span-2">
         <div className="mb-4 flex items-center justify-between">
           <h3 className="font-semibold text-slate-800">Odontograma</h3>
-          <Button variant="ghost" size="sm" onClick={handleReset}>
+          <Button variant="ghost" size="sm" onClick={() => setConfirmReset(true)}>
             <RotateCcw size={14} /> Reiniciar
           </Button>
         </div>
@@ -105,7 +106,9 @@ export function Odontogram({ pacienteId }: { pacienteId: string }) {
           />
         ) : (
           <div className="flex h-full min-h-64 flex-col items-center justify-center text-center">
-            <div className="mb-2 text-4xl">🦷</div>
+            <span className="mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-brand-50 text-brand-500">
+              <MousePointerClick size={26} />
+            </span>
             <p className="text-sm font-medium text-slate-600">Selecione um dente</p>
             <p className="mt-1 text-xs text-slate-400">
               Clique em qualquer dente do mapa para registrar a condição e adicionar observações.
@@ -113,6 +116,15 @@ export function Odontogram({ pacienteId }: { pacienteId: string }) {
           </div>
         )}
       </Card>
+
+      <ConfirmDialog
+        open={confirmReset}
+        title="Reiniciar odontograma"
+        description="Todas as marcações deste paciente serão apagadas. Esta ação não pode ser desfeita."
+        confirmLabel="Reiniciar"
+        onConfirm={handleReset}
+        onClose={() => setConfirmReset(false)}
+      />
     </div>
   )
 }

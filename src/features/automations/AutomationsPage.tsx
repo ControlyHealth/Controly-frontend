@@ -1,10 +1,11 @@
 import { useState } from 'react'
-import { Plus, Bot, MessageCircle, Pencil, Trash2, Zap } from 'lucide-react'
+import { Plus, Bot, MessageCircle, Pencil, Trash2, Zap, Circle, CircleDot } from 'lucide-react'
 import type { Automation } from '@/types'
 import { automationsService, type AutomationInput } from '@/services/automations'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { AutomationForm } from './AutomationForm'
 import { TRIGGER_LABELS } from './triggers'
@@ -13,6 +14,15 @@ export function AutomationsPage() {
   const [items, setItems] = useState<Automation[]>(() => automationsService.list())
   const [modalOpen, setModalOpen] = useState(false)
   const [editing, setEditing] = useState<Automation | undefined>(undefined)
+  const [toDelete, setToDelete] = useState<Automation | undefined>(undefined)
+
+  function confirmDelete() {
+    if (toDelete) {
+      automationsService.remove(toDelete.id)
+      setToDelete(undefined)
+      refresh()
+    }
+  }
 
   function refresh() {
     setItems(automationsService.list())
@@ -91,23 +101,15 @@ export function AutomationsPage() {
                 {a.mensagem}
               </p>
               <div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-3">
-                <span className={'text-xs font-medium ' + (a.ativo ? 'text-green-600' : 'text-slate-400')}>
-                  {a.ativo ? '● Ativa' : '○ Inativa'}
+                <span className={'flex items-center gap-1.5 text-xs font-medium ' + (a.ativo ? 'text-green-600' : 'text-slate-400')}>
+                  {a.ativo ? <CircleDot size={13} /> : <Circle size={13} />}
+                  {a.ativo ? 'Ativa' : 'Inativa'}
                 </span>
                 <div className="flex gap-1">
                   <Button variant="ghost" size="sm" onClick={() => { setEditing(a); setModalOpen(true) }}>
                     <Pencil size={15} />
                   </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      if (confirm(`Remover a automação "${a.nome}"?`)) {
-                        automationsService.remove(a.id)
-                        refresh()
-                      }
-                    }}
-                  >
+                  <Button variant="ghost" size="sm" onClick={() => setToDelete(a)}>
                     <Trash2 size={15} className="text-red-500" />
                   </Button>
                 </div>
@@ -129,6 +131,19 @@ export function AutomationsPage() {
           onCancel={() => { setModalOpen(false); setEditing(undefined) }}
         />
       </Modal>
+
+      <ConfirmDialog
+        open={!!toDelete}
+        title="Remover automação"
+        description={
+          <>
+            Remover a automação <strong>{toDelete?.nome}</strong>?
+          </>
+        }
+        confirmLabel="Remover"
+        onConfirm={confirmDelete}
+        onClose={() => setToDelete(undefined)}
+      />
     </div>
   )
 }

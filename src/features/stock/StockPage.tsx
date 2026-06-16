@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Input } from '@/components/ui/Input'
 import { Modal } from '@/components/ui/Modal'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { Badge } from '@/components/ui/Badge'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { StockForm, CATEGORY_LABEL } from './StockForm'
@@ -24,6 +25,7 @@ export function StockPage() {
   const [query, setQuery] = useState('')
   const [modalOpen, setModalOpen] = useState(false)
   const [editing, setEditing] = useState<StockItem | undefined>(undefined)
+  const [toDelete, setToDelete] = useState<StockItem | undefined>(undefined)
   const [onlyLow, setOnlyLow] = useState(false)
 
   const filtered = useMemo(() => {
@@ -53,9 +55,10 @@ export function StockPage() {
     refresh()
   }
 
-  function handleDelete(i: StockItem) {
-    if (confirm(`Remover "${i.nome}" do estoque?`)) {
-      stockService.remove(i.id)
+  function confirmDelete() {
+    if (toDelete) {
+      stockService.remove(toDelete.id)
+      setToDelete(undefined)
       refresh()
     }
   }
@@ -213,7 +216,7 @@ export function StockPage() {
                         </button>
                         <button
                           type="button"
-                          onClick={() => handleDelete(i)}
+                          onClick={() => setToDelete(i)}
                           className="rounded-lg p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600 cursor-pointer"
                           aria-label="Remover"
                         >
@@ -247,6 +250,19 @@ export function StockPage() {
           }}
         />
       </Modal>
+
+      <ConfirmDialog
+        open={!!toDelete}
+        title="Remover item"
+        description={
+          <>
+            Remover <strong>{toDelete?.nome}</strong> do estoque?
+          </>
+        }
+        confirmLabel="Remover"
+        onConfirm={confirmDelete}
+        onClose={() => setToDelete(undefined)}
+      />
     </div>
   )
 }

@@ -11,6 +11,7 @@ import {
   Activity,
 } from 'lucide-react'
 import { userService } from '@/services/user'
+import { Modal } from '@/components/ui/Modal'
 import Logo from '../../assets/favicon.png'
 import { cn } from '@/lib/cn'
 
@@ -27,6 +28,7 @@ export function LoginPage() {
   const [lembrar, setLembrar] = useState(true)
   const [erro, setErro] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [forgotOpen, setForgotOpen] = useState(false)
 
   if (userService.isAuthenticated()) {
     return <Navigate to="/" replace />
@@ -156,7 +158,7 @@ export function LoginPage() {
                 <button
                   type="button"
                   className="text-xs font-medium text-brand-600 hover:text-brand-700 cursor-pointer"
-                  onClick={() => alert('Como os dados são locais, basta entrar com seu e-mail.')}
+                  onClick={() => setForgotOpen(true)}
                 >
                   Esqueceu?
                 </button>
@@ -244,6 +246,22 @@ export function LoginPage() {
           </p>
         </div>
       </main>
+
+      <Modal open={forgotOpen} onClose={() => setForgotOpen(false)} title="Recuperar acesso">
+        <p className="text-sm text-slate-600">
+          Como os dados desta clínica são armazenados localmente no seu dispositivo, não há senha a
+          recuperar — basta entrar com o seu e-mail para acessar.
+        </p>
+        <div className="mt-5 flex justify-end">
+          <button
+            type="button"
+            onClick={() => setForgotOpen(false)}
+            className="inline-flex h-10 items-center justify-center rounded-lg bg-brand-600 px-4 text-sm font-semibold text-white transition-colors hover:bg-brand-700 cursor-pointer"
+          >
+            Entendi
+          </button>
+        </div>
+      </Modal>
     </div>
   )
 }
