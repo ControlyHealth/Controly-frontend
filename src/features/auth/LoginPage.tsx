@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Navigate, useNavigate } from 'react-router-dom'
+import { Navigate, useNavigate, Link } from 'react-router-dom'
 import {
   Mail,
   Lock,
@@ -241,7 +241,14 @@ export function LoginPage() {
             </button>
           </form>
 
-          <p className="mt-8 text-center text-xs text-slate-400">
+          <p className="mt-6 text-center text-sm text-slate-500">
+            Ainda não tem conta?{' '}
+            <Link to="/planos" className="font-semibold text-brand-600 hover:text-brand-700">
+              Ver planos
+            </Link>
+          </p>
+
+          <p className="mt-4 text-center text-xs text-slate-400">
             Protegido localmente · seus dados não saem deste dispositivo
           </p>
         </div>

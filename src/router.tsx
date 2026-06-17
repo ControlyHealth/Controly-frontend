@@ -8,10 +8,12 @@ import { StockPage } from '@/features/stock/StockPage'
 import { AgendaPage } from '@/features/agenda/AgendaPage'
 import { FinancePage } from '@/features/finance/FinancePage'
 import { LoginPage } from '@/features/auth/LoginPage'
+import { PlansPage } from '@/features/plans/PlansPage'
 import { RequireAuth } from '@/features/auth/RequireAuth'
 
 export const router = createBrowserRouter([
   { path: '/login', element: <LoginPage /> },
+  { path: '/planos', element: <PlansPage /> },
   {
     path: '/',
     element: (
