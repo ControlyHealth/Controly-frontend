@@ -32,15 +32,15 @@ export function Odontogram({ pacienteId }: { pacienteId: string }) {
 
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-      <Card className="p-5 lg:col-span-2">
-        <div className="mb-4 flex items-center justify-between">
+      <Card className="p-4 lg:col-span-2">
+        <div className="mb-3 flex items-center justify-between">
           <h3 className="font-semibold text-slate-800">Odontograma</h3>
           <Button variant="ghost" size="sm" onClick={() => setConfirmReset(true)}>
             <RotateCcw size={14} /> Reiniciar
           </Button>
         </div>
 
-        <div className="space-y-4 overflow-x-auto">
+        <div className="space-y-3 overflow-x-auto">
           {/* Arcada superior */}
           <div>
             <p className="mb-1 text-center text-xs font-medium uppercase tracking-wide text-slate-400">
@@ -63,7 +63,7 @@ export function Odontogram({ pacienteId }: { pacienteId: string }) {
 
           {/* faixa de gengiva */}
           <div
-            className="h-5 rounded-full"
+            className="h-4 rounded-full"
             style={{
               background:
                 'radial-gradient(60% 120% at 50% 50%, rgba(244,143,154,0.55), rgba(248,180,189,0.18) 70%, transparent 100%)',
@@ -91,12 +91,12 @@ export function Odontogram({ pacienteId }: { pacienteId: string }) {
           </div>
         </div>
 
-        <div className="mt-5 border-t border-slate-100 pt-4">
+        <div className="mt-4 border-t border-slate-100 pt-3">
           <Legend />
         </div>
       </Card>
 
-      <Card className="p-5">
+      <Card className="p-4">
         {selected ? (
           <ToothPanel
             numero={selected}

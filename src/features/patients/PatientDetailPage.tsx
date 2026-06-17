@@ -50,19 +50,19 @@ export function PatientDetailPage() {
   const tabs: Tab[] = ['panorama', 'odontograma', 'ortodontia', 'radiografias', 'observacoes']
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       <Link to="/pacientes" className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700">
         <ArrowLeft size={16} /> Pacientes
       </Link>
 
-      <Card className="p-5">
+      <Card className="p-4">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-4">
-            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-brand-100 text-lg font-semibold text-brand-700">
+          <div className="flex items-center gap-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-brand-100 text-base font-semibold text-brand-700">
               {initials(patient.nome)}
             </div>
             <div>
-              <h2 className="text-xl font-bold text-slate-800">{patient.nome}</h2>
+              <h2 className="text-lg font-bold text-slate-800">{patient.nome}</h2>
               <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-500">
                 {patient.cpf && (
                   <span className="flex items-center gap-1.5"><IdCard size={14} /> {patient.cpf}</span>

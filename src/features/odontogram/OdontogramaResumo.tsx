@@ -140,8 +140,8 @@ export function OdontogramaResumo({
   ]
 
   return (
-    <Card className="p-5">
-      <div className="mb-4 flex items-center justify-between">
+    <Card className="p-4">
+      <div className="mb-3 flex items-center justify-between">
         <button
           type="button"
           onClick={onOpen}
@@ -162,7 +162,7 @@ export function OdontogramaResumo({
       </div>
 
       {/* índice de saúde bucal */}
-      <div className="mb-5">
+      <div className="mb-4">
         <div className="mb-1.5 flex items-center justify-between text-sm">
           <span className="flex items-center gap-1.5 font-medium text-slate-700">
             <HeartPulse size={15} className="text-rose-500" /> Saúde bucal
@@ -183,8 +183,8 @@ export function OdontogramaResumo({
       {/* mini-cards de contagem */}
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         {stats.map((s) => (
-          <div key={s.label} className="rounded-xl border border-slate-100 bg-slate-50/60 p-3">
-            <p className="text-2xl font-bold tabular-nums text-slate-800">{s.value}</p>
+          <div key={s.label} className="rounded-xl border border-slate-100 bg-slate-50/60 p-2.5">
+            <p className="text-xl font-bold tabular-nums text-slate-800">{s.value}</p>
             <p className="flex items-center gap-1.5 text-xs text-slate-500">
               <span className={cn('h-1.5 w-1.5 rounded-full', s.dot)} />
               {s.label}
@@ -194,7 +194,7 @@ export function OdontogramaResumo({
       </div>
 
       {/* detalhamento das condições */}
-      <div className="mt-4 border-t border-slate-100 pt-4">
+      <div className="mt-3 border-t border-slate-100 pt-3">
         <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-400">
           Condições registradas
         </p>
@@ -230,21 +230,21 @@ export function OdontogramaResumo({
       </div>
 
       {/* laudo técnico escrito */}
-      <div className="mt-5 rounded-xl border border-slate-100 bg-slate-50/60 p-4">
+      <div className="mt-4 rounded-xl border border-slate-100 bg-slate-50/60 p-3">
         <div className="mb-2 flex items-center justify-between">
           <p className="flex items-center gap-1.5 text-sm font-semibold text-slate-700">
             <FileText size={15} className="text-brand-600" /> Laudo técnico
           </p>
           <span className="text-xs text-slate-400">Emitido em {fmtData(new Date().toISOString())}</span>
         </div>
-        <div className="space-y-2 text-sm leading-relaxed text-slate-600">
+        <div className="space-y-1.5 text-xs leading-relaxed text-slate-600">
           {laudo.map((par, i) => (
             <p key={i} className={i === laudo.length - 1 ? 'font-medium text-slate-700' : undefined}>
               {par}
             </p>
           ))}
         </div>
-        <p className="mt-3 border-t border-slate-200 pt-2 text-[11px] text-slate-400">
+        <p className="mt-2 border-t border-slate-200 pt-2 text-[11px] text-slate-400">
           Documento gerado automaticamente a partir do odontograma · última atualização do mapa em{' '}
           {fmtData(resumo.atualizadoEm)}. Não substitui avaliação clínica presencial.
         </p>

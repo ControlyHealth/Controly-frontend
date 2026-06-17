@@ -60,9 +60,11 @@ export function PatientOverview({
   const marcacoes = ORTO_ORDER.filter((m) => resumo.porOrto[m] > 0)
 
   return (
-    <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+    <div className="grid grid-cols-1 gap-3 lg:grid-cols-3 lg:items-start">
+      {/* Coluna esquerda: dados + ortodontia + radiografias */}
+      <div className="space-y-3 lg:col-span-1">
       {/* Dados cadastrais */}
-      <Card className="p-5 lg:col-span-1">
+      <Card className="p-4">
         <h3 className="mb-3 text-sm font-semibold text-slate-800">Dados do paciente</h3>
         <dl className="space-y-2.5 text-sm">
           {anos !== null && (
@@ -95,15 +97,8 @@ export function PatientOverview({
         )}
       </Card>
 
-      {/* Resumo clínico */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:col-span-2">
-        {/* Odontograma — resumo geral */}
-        <div className="sm:col-span-2">
-          <OdontogramaResumo pacienteId={patient.id} onOpen={() => onGoto('odontograma')} />
-        </div>
-
-        {/* Ortodontia */}
-        <Card className="p-5">
+      {/* Ortodontia */}
+      <Card className="p-4">
           <button
             type="button"
             onClick={() => onGoto('ortodontia')}
@@ -133,7 +128,7 @@ export function PatientOverview({
         </Card>
 
         {/* Radiografias */}
-        <Card className="p-5 sm:col-span-2">
+        <Card className="p-4">
           <button
             type="button"
             onClick={() => onGoto('radiografias')}
@@ -150,6 +145,11 @@ export function PatientOverview({
             </span>
           </button>
         </Card>
+      </div>
+
+      {/* Coluna direita: resumo geral do odontograma + laudo */}
+      <div className="lg:col-span-2">
+        <OdontogramaResumo pacienteId={patient.id} onOpen={() => onGoto('odontograma')} />
       </div>
     </div>
   )

@@ -80,11 +80,11 @@ export function PlansPage() {
     ciclo === 'anual' ? Math.round((mensal * 10) / 12) : mensal
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <div className="mx-auto max-w-5xl px-6 py-12">
+    <div className="h-screen overflow-hidden bg-slate-50">
+      <div className="mx-auto flex h-full max-w-5xl flex-col justify-center px-6 py-6">
         <Link
           to="/login"
-          className="mb-8 inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700"
+          className="mb-4 inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700"
         >
           <ArrowLeft size={16} /> Voltar ao login
         </Link>
@@ -102,7 +102,7 @@ export function PlansPage() {
         </div>
 
         {/* toggle de ciclo */}
-        <div className="mt-8 flex items-center justify-center gap-3">
+        <div className="mt-6 flex items-center justify-center gap-3">
           <button
             type="button"
             onClick={() => setCiclo('mensal')}
@@ -129,7 +129,7 @@ export function PlansPage() {
         </div>
 
         {/* cards */}
-        <div className="mt-10 grid grid-cols-1 gap-6 md:grid-cols-3">
+        <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-3">
           {PLANOS.map((p) => {
             const Icon = p.icon
             return (
@@ -210,7 +210,7 @@ export function PlansPage() {
           })}
         </div>
 
-        <p className="mt-10 text-center text-xs text-slate-400">
+        <p className="mt-6 text-center text-xs text-slate-400">
           Valores em reais (BRL). Precisa de algo diferente?{' '}
           <a href="mailto:contato@controly.app" className="font-medium text-brand-600 hover:text-brand-700">
             Fale com a nossa equipe

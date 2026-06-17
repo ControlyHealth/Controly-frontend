@@ -290,7 +290,43 @@ Features:
 
 ---
 
-## 11. Requisitos transversais (infraestrutura)
+## 11. Planos e Assinaturas (Billing)
+
+Surge a partir da tela pública de planos (`/planos`). Define o que cada clínica pode usar e gera a receita do produto.
+
+Planos atuais (referência do front):
+
+- **Individual** — R$ 129/mês · 1 profissional · módulos clínicos + financeiro.
+- **Equipe** — R$ 249/mês · até 5 profissionais · automações WhatsApp + relatórios.
+- **Personalizado** — sob consulta · profissionais ilimitados / multiunidade · contato comercial.
+
+Features:
+
+- Catálogo de planos (nome, preço mensal/anual, limites, recursos).
+- Ciclo de cobrança mensal e anual (anual com desconto — "2 meses grátis").
+- Assinatura da clínica: plano atual, status (ativa, trial, inadimplente, cancelada), data de renovação.
+- Período de teste (trial) e fluxo de upgrade/downgrade.
+- **Enforcement de limites** por plano: nº de profissionais, acesso a automações/relatórios, etc. (middleware que bloqueia recursos fora do plano).
+- Integração com gateway de pagamento (Stripe, Pagar.me, Asaas, Iugu) — assinaturas recorrentes, cartão/boleto/Pix.
+- Webhooks do gateway para atualizar status (pagamento aprovado, falhou, estornado).
+- Faturas/recibos da assinatura e histórico de cobranças.
+- Lead do plano "Personalizado": registrar contato comercial (form/e-mail).
+
+| Método | Rota | Descrição |
+|--------|------|-----------|
+| GET | `/plans` | Catálogo de planos |
+| GET | `/subscription` | Assinatura atual da clínica |
+| POST | `/subscription` | Assina/escolhe plano |
+| PATCH | `/subscription` | Upgrade/downgrade/cancelamento |
+| GET | `/subscription/invoices` | Histórico de cobranças |
+| POST | `/billing/webhook` | Webhook do gateway |
+| POST | `/leads/contact` | Contato do plano personalizado |
+
+Observação importante: o front hoje "vende dados locais" e o login é fictício — billing real só faz sentido depois da **autenticação real (seção 1)** e do **multi-tenant (seção 12)**.
+
+---
+
+## 12. Requisitos transversais (infraestrutura)
 
 Itens que não são de um domínio só, mas precisam existir:
 
@@ -315,6 +351,6 @@ Itens que não são de um domínio só, mas precisam existir:
 
 Fase 1 (MVP — paridade com o front): Auth real, Pacientes, Odontograma, Ortodontia, Agenda, Estoque, Radiografias (com storage), Finanças (lançamentos + contas a receber + orçamentos), Dashboard.
 
-Fase 2 (diferencial): Motor de automações + WhatsApp, lembretes agendados, logs de envio, auditoria, laudo/orçamento em PDF, relatórios financeiros (fluxo de caixa).
+Fase 2 (diferencial + monetização): Motor de automações + WhatsApp, lembretes agendados, logs de envio, auditoria, laudo/orçamento em PDF, relatórios financeiros (fluxo de caixa), **Billing/Assinaturas** (gateway de pagamento + enforcement de limites por plano).
 
 Fase 3 (escala/compliance): multi-tenant robusto, papéis/permissões, LGPD completa, relatórios avançados e histórico de movimentações (estoque e financeiro).
