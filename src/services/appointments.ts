@@ -1,12 +1,11 @@
 import type { Appointment } from '@/types'
 import { readStore, writeStore } from '@/lib/storage'
 import { uid } from '@/lib/id'
-import { SEED_APPOINTMENTS } from '@/data/seed'
 
 const KEY = 'appointments'
 
 function load(): Appointment[] {
-  return readStore<Appointment[]>(KEY, SEED_APPOINTMENTS)
+  return readStore<Appointment[]>(KEY, [])
 }
 
 function persist(list: Appointment[]): void {

@@ -1,12 +1,11 @@
 import type { Patient } from '@/types'
 import { readStore, writeStore } from '@/lib/storage'
 import { uid } from '@/lib/id'
-import { SEED_PATIENTS } from '@/data/seed'
 
 const KEY = 'patients'
 
 function load(): Patient[] {
-  return readStore<Patient[]>(KEY, SEED_PATIENTS)
+  return readStore<Patient[]>(KEY, [])
 }
 
 function persist(list: Patient[]): void {

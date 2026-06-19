@@ -1,14 +1,13 @@
 import type { Transaction, Orcamento } from '@/types'
 import { readStore, writeStore } from '@/lib/storage'
 import { uid } from '@/lib/id'
-import { SEED_TRANSACTIONS, SEED_ORCAMENTOS } from '@/data/seed'
 
 const TKEY = 'transactions'
 const OKEY = 'orcamentos'
 
 // ---------- Lançamentos ----------
 function loadT(): Transaction[] {
-  return readStore<Transaction[]>(TKEY, SEED_TRANSACTIONS)
+  return readStore<Transaction[]>(TKEY, [])
 }
 function persistT(list: Transaction[]): void {
   writeStore(TKEY, list)
@@ -79,7 +78,7 @@ export const financeService = {
 
 // ---------- Orçamentos ----------
 function loadO(): Orcamento[] {
-  return readStore<Orcamento[]>(OKEY, SEED_ORCAMENTOS)
+  return readStore<Orcamento[]>(OKEY, [])
 }
 function persistO(list: Orcamento[]): void {
   writeStore(OKEY, list)

@@ -1,12 +1,11 @@
 import type { Automation } from '@/types'
 import { readStore, writeStore } from '@/lib/storage'
 import { uid } from '@/lib/id'
-import { SEED_AUTOMATIONS } from '@/data/seed'
 
 const KEY = 'automations'
 
 function load(): Automation[] {
-  return readStore<Automation[]>(KEY, SEED_AUTOMATIONS)
+  return readStore<Automation[]>(KEY, [])
 }
 
 function persist(list: Automation[]): void {

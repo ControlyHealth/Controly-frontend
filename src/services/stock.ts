@@ -1,12 +1,11 @@
 import type { StockItem } from '@/types'
 import { readStore, writeStore } from '@/lib/storage'
 import { uid } from '@/lib/id'
-import { SEED_STOCK } from '@/data/seed'
 
 const KEY = 'stock'
 
 function load(): StockItem[] {
-  return readStore<StockItem[]>(KEY, SEED_STOCK)
+  return readStore<StockItem[]>(KEY, [])
 }
 
 function persist(list: StockItem[]): void {
