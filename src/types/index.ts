@@ -54,6 +54,20 @@ export interface Odontograma {
   atualizadoEm: string
 }
 
+/** ----- Linha do tempo: sessão clínica com foto + estado dos dentes ----- */
+export interface OdontoSessao {
+  id: ID
+  pacienteId: ID
+  /** data da sessão (YYYY-MM-DD) */
+  data: string
+  /** foto intraoral comprimida (dataURL jpeg) */
+  foto?: string
+  observacao?: string
+  /** snapshot do odontograma no momento da sessão */
+  dentes: Record<number, ToothRecord>
+  criadoEm: string
+}
+
 /** ----- Radiografias ----- */
 export type RadiografiaTipo =
   | 'panoramica'

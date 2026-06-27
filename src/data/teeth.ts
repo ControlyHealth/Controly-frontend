@@ -60,33 +60,39 @@ export interface ToothShape {
 }
 
 export const TOOTH_SHAPES: Record<ToothType, ToothShape> = {
+  // Incisivo — coroa trapezoidal com borda incisal levemente lobulada (mamelões)
   incisivo: {
-    crown: 'M9 25 L9.5 12 C9.5 7 12 4 18 3.2 C24 4 26.5 7 26.5 12 L27 25 Z',
+    crown:
+      'M9 25 L9.4 12 C9.4 7 11.6 4.4 13.8 3.9 C14.9 4.6 15.6 4.6 16.5 4 C17.2 3.5 18.8 3.5 19.5 4 C20.4 4.6 21.1 4.6 22.2 3.9 C24.4 4.4 26.6 7 26.6 12 L27 25 Z',
     roots: 'M12 25 C11 37 14.5 49 18 52 C21.5 49 25 37 24 25 Z',
-    grooves: 'M14.5 8 L14.5 20 M21.5 8 L21.5 20',
+    grooves: 'M14 5.5 L14 12 M18 5 L18 12 M22 5.5 L22 12',
     crownCY: 14,
   },
+  // Canino — cúspide pontiaguda central e cíngulo, raiz longa e robusta
   canino: {
-    crown: 'M9.5 25 L10 13 C10 7 13.5 5 18 2.2 C22.5 5 26 7 26 13 L26.5 25 Z',
+    crown:
+      'M9.5 25 L10 13 C10 7.5 12.4 6 15.4 4.6 L18 2.3 L20.6 4.6 C23.6 6 26 7.5 26 13 L26.5 25 Z',
     roots: 'M10.5 25 C8.5 40 15 54 18 55 C21 54 27.5 40 25.5 25 Z',
-    grooves: 'M18 5 L18 19',
+    grooves: 'M18 4 L18 20 M14.2 9 L14.6 20 M21.8 9 L21.4 20',
     crownCY: 14,
   },
+  // Pré-molar — cúspide vestibular arredondada e sulco oclusal
   premolar: {
     crown:
-      'M8 25 L8 12 C8 8 10.5 6.5 12.5 6.5 C14.5 6.5 15.5 8.5 18 8.5 C20.5 8.5 21.5 6.5 23.5 6.5 C25.5 6.5 28 8 28 12 L28 25 Z',
+      'M8 25 L8 12 C8 8.6 9.8 7.1 11.6 6.8 Q14.6 6.4 16.6 5.3 Q18 4.5 19.4 5.3 Q21.4 6.4 24.4 6.8 C26.2 7.1 28 8.6 28 12 L28 25 Z',
     roots: 'M11 25 C10 37 15 48 18 49.5 C21 48 26 37 25 25 Z',
-    grooves: 'M18 9 L18 16 M12 12 L24 12',
+    grooves: 'M18 5.5 L18 16 M11.5 12 Q18 14 24.5 12 M18 5.5 L12.5 11 M18 5.5 L23.5 11',
     crownCY: 15,
   },
+  // Molar — duas cúspides vestibulares com sulco central; raízes com furca
   molar: {
     crown:
-      'M6 25 L6 12 C6 8 8.5 6.5 10.5 6.5 C12 6.5 12.5 8.5 14 8.5 C15.5 8.5 16 6.8 18 6.8 C20 6.8 20.5 8.5 22 8.5 C23.5 8.5 24 6.5 25.5 6.5 C27.5 6.5 30 8 30 12 L30 25 Z',
+      'M6 25 L6 12 C6 8.6 7.8 7 9.6 6.7 Q12 6.4 13.6 8 L15 9.5 Q16.2 10.5 18 9.9 Q19.8 10.5 21 9.5 L22.4 8 Q24 6.4 26.4 6.7 C28.2 7 30 8.6 30 12 L30 25 Z',
     roots:
       'M10 25 C7 35 6 47 7.5 48 C9.5 47 12 36 13 26 Z M23 26 C24 36 26.5 47 28.5 48 C30 47 29 35 26 25 Z',
     rootsUpper:
       'M9 25 C6 34 4 45 5.5 46 C7.5 45 9.5 36 11 26 Z M16.5 25 C16 35 16 46 18 47 C20 46 20 35 19.5 25 Z M25 26 C26.5 36 30 45 31 46 C32.5 45 30 34 27 25 Z',
-    grooves: 'M10 12 L26 12 M18 8 L18 21',
+    grooves: 'M18 9.5 L18 19 M9.5 12 Q18 15 26.5 12 M12.5 8 L12.5 12 M24 8 L24 12',
     crownCY: 15,
   },
 }

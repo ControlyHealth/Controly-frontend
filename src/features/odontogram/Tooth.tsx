@@ -10,6 +10,20 @@ import {
 } from '@/data/teeth'
 import { cn } from '@/lib/cn'
 
+/** Mistura uma cor hex com um alvo (0..1). */
+function mix(hex: string, target: string, amt: number): string {
+  const a = parseInt(hex.slice(1), 16)
+  const b = parseInt(target.slice(1), 16)
+  const ar = (a >> 16) & 255, ag = (a >> 8) & 255, ab = a & 255
+  const br = (b >> 16) & 255, bg = (b >> 8) & 255, bb = b & 255
+  const r = Math.round(ar + (br - ar) * amt)
+  const g = Math.round(ag + (bg - ag) * amt)
+  const bl = Math.round(ab + (bb - ab) * amt)
+  return '#' + ((1 << 24) + (r << 16) + (g << 8) + bl).toString(16).slice(1)
+}
+const lighten = (h: string, a: number) => mix(h, '#ffffff', a)
+const darken = (h: string, a: number) => mix(h, '#000000', a)
+
 /** Desenha o marcador ortodôntico sobre a coroa (em coordenadas de tela). */
 function OrtoOverlay({ marker, cy }: { marker: OrtoMarker; cy: number }) {
   const color = ORTO_META[marker].color
@@ -104,6 +118,13 @@ export function Tooth({
   // molares superiores têm 3 raízes
   const roots = type === 'molar' && flip && shape.rootsUpper ? shape.rootsUpper : shape.roots
 
+  // ids únicos por dente para os gradientes/recortes
+  const enamelId = `enamel-${numero}`
+  const rootId = `root-${numero}`
+  const clipId = `clip-${numero}`
+  const crownFill = ausente ? meta.fill : `url(#${enamelId})`
+  const rootFill = ausente ? 'none' : `url(#${rootId})`
+
   return (
     <button
       type="button"
@@ -115,11 +136,27 @@ export function Tooth({
       )}
     >
       <svg width="34" height="52" viewBox="0 0 36 56" className="shrink-0 drop-shadow-sm">
+        <defs>
+          {/* esmalte: claro na borda, cor da condição no meio, leve sombra no colo */}
+          <linearGradient id={enamelId} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor={lighten(meta.fill, 0.5)} />
+            <stop offset="0.5" stopColor={meta.fill} />
+            <stop offset="1" stopColor={darken(meta.fill, 0.06)} />
+          </linearGradient>
+          {/* raiz: dentina creme com sombreamento até o ápice */}
+          <linearGradient id={rootId} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor={lighten(ROOT_FILL, 0.12)} />
+            <stop offset="1" stopColor={darken(ROOT_FILL, 0.14)} />
+          </linearGradient>
+          <clipPath id={clipId}>
+            <path d={shape.crown} />
+          </clipPath>
+        </defs>
         <g transform={flip ? 'translate(0,56) scale(1,-1)' : undefined}>
-          {/* raiz (dentina/cemento, creme) */}
+          {/* raiz (dentina/cemento) */}
           <path
             d={roots}
-            fill={ausente ? 'none' : ROOT_FILL}
+            fill={rootFill}
             stroke={ausente ? meta.stroke : ROOT_STROKE}
             strokeWidth={1.4}
             strokeLinejoin="round"
@@ -129,21 +166,28 @@ export function Tooth({
           {/* coroa (esmalte) — recebe a cor da condição */}
           <path
             d={shape.crown}
-            fill={meta.fill}
+            fill={crownFill}
             stroke={meta.stroke}
             strokeWidth={1.7}
             strokeLinejoin="round"
             strokeDasharray={ausente ? '3 3' : undefined}
           />
-          {/* sulcos da coroa */}
+          {/* brilho especular do esmalte (recortado na coroa) */}
+          {!ausente && (
+            <g clipPath={`url(#${clipId})`}>
+              <ellipse cx={13.5} cy={9.5} rx={6} ry={9} fill="#ffffff" opacity={0.28} />
+              <ellipse cx={22} cy={20} rx={7} ry={5} fill={darken(meta.fill, 0.08)} opacity={0.22} />
+            </g>
+          )}
+          {/* sulcos / anatomia da coroa */}
           {!ausente && shape.grooves && (
             <path
               d={shape.grooves}
               fill="none"
               stroke={GROOVE}
-              strokeWidth={1}
+              strokeWidth={0.9}
               strokeLinecap="round"
-              opacity={0.55}
+              opacity={0.5}
             />
           )}
         </g>

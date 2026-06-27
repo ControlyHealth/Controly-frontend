@@ -7,16 +7,27 @@ import { STATUS_META, ORTO_META } from '@/data/teeth'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Odontogram } from '@/features/odontogram/Odontogram'
+import { ToothView3D } from '@/features/odontogram/ToothView3D'
+import { TreatmentTimeline } from '@/features/odontogram/TreatmentTimeline'
 import { OrthoPanel } from '@/features/ortho/OrthoPanel'
 import { RadiografiasPanel } from '@/features/radiografias/RadiografiasPanel'
 import { PatientOverview } from './PatientOverview'
 import { formatDate, initials } from '@/lib/format'
 
-type Tab = 'panorama' | 'odontograma' | 'ortodontia' | 'radiografias' | 'observacoes'
+type Tab =
+  | 'panorama'
+  | 'odontograma'
+  | 'visualizacao3d'
+  | 'linhadotempo'
+  | 'ortodontia'
+  | 'radiografias'
+  | 'observacoes'
 
 const TAB_LABEL: Record<Tab, string> = {
   panorama: 'Panorama',
   odontograma: 'Odontograma',
+  visualizacao3d: 'Visualização 3D',
+  linhadotempo: 'Linha do tempo',
   ortodontia: 'Ortodontia',
   radiografias: 'Radiografias',
   observacoes: 'Registros',
@@ -47,7 +58,7 @@ export function PatientDetailPage() {
     ? `https://wa.me/55${patient.telefone.replace(/\D/g, '')}`
     : undefined
 
-  const tabs: Tab[] = ['panorama', 'odontograma', 'ortodontia', 'radiografias', 'observacoes']
+  const tabs: Tab[] = ['panorama', 'odontograma', 'visualizacao3d', 'linhadotempo', 'ortodontia', 'radiografias', 'observacoes']
 
   return (
     <div className="space-y-4">
@@ -109,6 +120,10 @@ export function PatientDetailPage() {
       {tab === 'panorama' && <PatientOverview patient={patient} onGoto={(t) => setTab(t)} />}
 
       {tab === 'odontograma' && <Odontogram pacienteId={id} />}
+
+      {tab === 'visualizacao3d' && <ToothView3D pacienteId={id} />}
+
+      {tab === 'linhadotempo' && <TreatmentTimeline pacienteId={id} />}
 
       {tab === 'ortodontia' && <OrthoPanel pacienteId={id} />}
 
