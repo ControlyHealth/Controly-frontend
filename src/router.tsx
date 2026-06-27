@@ -4,6 +4,7 @@ import { DashboardPage } from '@/features/dashboard/DashboardPage'
 import { PatientsPage } from '@/features/patients/PatientsPage'
 import { PatientDetailPage } from '@/features/patients/PatientDetailPage'
 import { AutomationsPage } from '@/features/automations/AutomationsPage'
+import { InboxPage } from '@/features/inbox/InboxPage'
 import { StockPage } from '@/features/stock/StockPage'
 import { AgendaPage } from '@/features/agenda/AgendaPage'
 import { FinancePage } from '@/features/finance/FinancePage'
@@ -25,6 +26,7 @@ export const router = createBrowserRouter([
       { index: true, element: <DashboardPage /> },
       { path: 'pacientes', element: <PatientsPage /> },
       { path: 'pacientes/:id', element: <PatientDetailPage /> },
+      { path: 'mensagens', element: <InboxPage /> },
       { path: 'agenda', element: <AgendaPage /> },
       { path: 'estoque', element: <StockPage /> },
       { path: 'financas', element: <FinancePage /> },

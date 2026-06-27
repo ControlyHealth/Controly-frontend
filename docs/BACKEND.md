@@ -205,6 +205,64 @@ Infra necessária: fila de jobs (BullMQ/Sidekiq/Celery), worker agendado, webhoo
 
 ---
 
+## 8.5 Mensagens / Caixa de entrada unificada
+
+Espelha `inboxService` (connections, connect, disconnect, conversations, messages, reply, markRead, unreadTotal). Hoje é tudo local com dados de exemplo. O objetivo do recurso é **centralizar num só lugar as mensagens das redes da clínica** (WhatsApp, Instagram e Facebook), para o funcionário não precisar abrir um aplicativo de cada vez. O grande trabalho de backend é **integrar de fato** com as plataformas e manter as conversas sincronizadas em tempo real.
+
+### 8.5.1 Conexão de canais
+
+Features:
+
+- Conectar/desconectar cada canal da clínica (uma conta por canal): WhatsApp, Instagram, Facebook.
+- Fluxo OAuth com a Meta (Facebook Login) para Instagram e Messenger; WhatsApp Business via Meta Cloud API (token + phone number ID).
+- Guardar com segurança tokens de acesso (criptografados em repouso) e renovar tokens de longa duração.
+- Status da conexão (`conectado`, `desconectado`, `erro`) e reautenticação quando o token expira.
+- Registro do webhook de cada canal para receber mensagens em tempo real.
+
+| Método | Rota | Descrição |
+|--------|------|-----------|
+| GET | `/inbox/connections` | Lista status de cada canal |
+| POST | `/inbox/connections/:canal/connect` | Inicia/conclui OAuth e ativa o canal |
+| DELETE | `/inbox/connections/:canal` | Desconecta o canal (revoga token) |
+
+Canais: `whatsapp`, `instagram`, `facebook`. Status: `conectado`, `desconectado`, `erro`.
+
+### 8.5.2 Conversas e mensagens
+
+Features:
+
+- Listar conversas (uma conversa = um contato dentro de um canal), ordenadas pela última mensagem, com filtro por canal e contagem de não lidas.
+- Listar mensagens de uma conversa (histórico, paginado).
+- Enviar resposta pelo canal de origem (a resposta sai pela API da rede correta).
+- Marcar conversa como lida (zera o contador).
+- Total de não lidas (badge da sidebar).
+- Receber mensagens recebidas via **webhook** de cada plataforma e gravar na conversa correspondente (criando a conversa se for um contato novo).
+- (Opcional) vincular a conversa a um paciente já cadastrado (`pacienteId`) por telefone/e-mail.
+- (Futuro) atribuição de conversa a um atendente, status (aberta/resolvida), respostas rápidas/templates e anexos (imagem/áudio/documento).
+
+| Método | Rota | Descrição |
+|--------|------|-----------|
+| GET | `/inbox/conversations?canal=&unread=` | Lista/filtra conversas |
+| GET | `/inbox/conversations/:id/messages?page=` | Mensagens da conversa |
+| POST | `/inbox/conversations/:id/messages` | Envia resposta pelo canal |
+| PATCH | `/inbox/conversations/:id/read` | Marca como lida |
+| GET | `/inbox/unread-count` | Total de não lidas |
+| POST | `/inbox/webhooks/:canal` | Webhook de entrada (Meta) |
+
+Direção da mensagem: `recebida`, `enviada`.
+
+Regras e integrações:
+
+- **WhatsApp:** Meta Cloud API (ou Twilio). Atenção à janela de 24h de atendimento e ao uso de *templates* aprovados para iniciar conversa fora dela.
+- **Instagram + Facebook:** Meta Graph API / Messenger Platform; a conta do Instagram precisa ser Profissional e estar vinculada a uma página do Facebook; permissões `instagram_manage_messages` e `pages_messaging`.
+- **Webhooks:** verificação de assinatura (X-Hub-Signature), idempotência (não duplicar mensagem reenviada) e fila para processar picos.
+- **Tempo real no front:** WebSocket/SSE para empurrar novas mensagens sem recarregar.
+- **Multi-tenant + LGPD:** conversas isoladas por clínica; dados de contato são pessoais (consentimento, retenção e exclusão).
+
+Infra necessária: fila de jobs para webhooks, canal de tempo real (WebSocket/SSE), storage para anexos, cofre de segredos para os tokens.
+
+---
+
 ## 9. Finanças
 
 Espelha `financeService` (lançamentos + resumo) e `orcamentosService` (orçamentos). Cobre três frentes: lançamentos (receitas/despesas), contas a receber e orçamentos / plano de tratamento.
@@ -351,6 +409,6 @@ Itens que não são de um domínio só, mas precisam existir:
 
 Fase 1 (MVP — paridade com o front): Auth real, Pacientes, Odontograma, Ortodontia, Agenda, Estoque, Radiografias (com storage), Finanças (lançamentos + contas a receber + orçamentos), Dashboard.
 
-Fase 2 (diferencial + monetização): Motor de automações + WhatsApp, lembretes agendados, logs de envio, auditoria, laudo/orçamento em PDF, relatórios financeiros (fluxo de caixa), **Billing/Assinaturas** (gateway de pagamento + enforcement de limites por plano).
+Fase 2 (diferencial + monetização): Motor de automações + WhatsApp, **Mensagens / caixa de entrada unificada** (WhatsApp + Instagram + Facebook via Meta API, webhooks e tempo real), lembretes agendados, logs de envio, auditoria, laudo/orçamento em PDF, relatórios financeiros (fluxo de caixa), **Billing/Assinaturas** (gateway de pagamento + enforcement de limites por plano).
 
 Fase 3 (escala/compliance): multi-tenant robusto, papéis/permissões, LGPD completa, relatórios avançados e histórico de movimentações (estoque e financeiro).

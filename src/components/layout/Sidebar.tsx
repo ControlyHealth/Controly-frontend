@@ -1,14 +1,16 @@
 import { useState } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, Users, Bot, Package, CalendarDays, Wallet, LogOut, ChevronUp } from 'lucide-react'
+import { LayoutDashboard, Users, Bot, Package, CalendarDays, Wallet, LogOut, ChevronUp, MessagesSquare } from 'lucide-react'
 import Logo from "../../assets/favicon.png"
 import { userService } from '@/services/user'
+import { inboxService } from '@/services/inbox'
 import { initials } from '@/lib/format'
 import { cn } from '@/lib/cn'
 
 const links = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
   { to: '/pacientes', label: 'Pacientes', icon: Users, end: false },
+  { to: '/mensagens', label: 'Mensagens', icon: MessagesSquare, end: false },
   { to: '/agenda', label: 'Agenda', icon: CalendarDays, end: false },
   { to: '/estoque', label: 'Estoque', icon: Package, end: false },
   { to: '/financas', label: 'Finanças', icon: Wallet, end: false },
@@ -19,6 +21,7 @@ export function Sidebar() {
   const navigate = useNavigate()
   const user = userService.current()
   const [menuOpen, setMenuOpen] = useState(false)
+  const naoLidas = inboxService.unreadTotal()
 
   function handleLogout() {
     userService.logout()
@@ -52,7 +55,12 @@ export function Sidebar() {
             }
           >
             <Icon size={18} />
-            {label}
+            <span className="flex-1">{label}</span>
+            {to === '/mensagens' && naoLidas > 0 && (
+              <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-600 px-1.5 text-[11px] font-semibold text-white">
+                {naoLidas}
+              </span>
+            )}
           </NavLink>
         ))}
       </nav>

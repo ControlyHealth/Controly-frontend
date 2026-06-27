@@ -145,6 +145,52 @@ export interface Automation {
   atualizadoEm: string
 }
 
+/** ----- Mensagens / Caixa de entrada unificada ----- */
+
+/** Redes/canais de mensagem que podem ser conectados num só lugar. */
+export type MessageChannel = 'whatsapp' | 'instagram' | 'facebook'
+
+export type ChannelStatus = 'conectado' | 'desconectado' | 'erro'
+
+/** Conexão de um canal social da clínica (uma conta por canal). */
+export interface ChannelConnection {
+  canal: MessageChannel
+  status: ChannelStatus
+  /** Nome/handle da conta conectada (ex.: @clinicacontroly, número, página). */
+  conta?: string
+  conectadoEm?: string
+  atualizadoEm: string
+}
+
+export type MessageDirection = 'recebida' | 'enviada'
+
+export interface Message {
+  id: ID
+  conversaId: ID
+  direcao: MessageDirection
+  texto: string
+  /** Quem enviou (nome do contato ou do atendente). */
+  autor?: string
+  criadoEm: string
+}
+
+/** Uma conversa = um contato dentro de um canal. */
+export interface Conversation {
+  id: ID
+  canal: MessageChannel
+  /** Nome ou @ do contato externo. */
+  contato: string
+  /** Foto/avatar opcional (dataURL ou URL). */
+  avatar?: string
+  ultimaMensagem: string
+  ultimaMensagemEm: string
+  naoLidas: number
+  /** Vínculo opcional com um paciente já cadastrado. */
+  pacienteId?: ID
+  criadoEm: string
+  atualizadoEm: string
+}
+
 /** ----- Agenda / Consultas ----- */
 export type AppointmentStatus =
   | 'agendado'
