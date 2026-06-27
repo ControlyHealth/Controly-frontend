@@ -1,6 +1,6 @@
 # Controly — Especificação do Backend
 
-Lista completa das features a implementar no backend para suportar o frontend atual (hoje 100% em `localStorage`). Organizado por domínio, com endpoints REST sugeridos, regras de negócio e o que precisa existir além do que o front já faz.
+Lista completa das features a implementar no backend para suportar o frontend atual (hoje 100% client-side: `localStorage` para a maioria dos dados e `IndexedDB` para as fotos das sessões clínicas). Organizado por domínio, com endpoints REST sugeridos, regras de negócio e o que precisa existir além do que o front já faz.
 
 Convenções: respostas em JSON; autenticação via `Authorization: Bearer <token>`; todos os recursos isolados por clínica (multi-tenant). IDs são strings (UUID). Datas em ISO 8601; campos de agenda em `YYYY-MM-DD` / `HH:MM`.
 
@@ -124,6 +124,34 @@ Tipos: `panoramica`, `periapical`, `interproximal`, `oclusal`, `telerradiografia
 
 ---
 
+## 5.5 Sessões clínicas / Linha do tempo (fotos intraorais + evolução)
+
+Recurso novo no front (`sessionsService`). Por causa do peso das fotos, hoje é guardado em **IndexedDB** (não em `localStorage`). Cada sessão registra, numa data, uma **foto intraoral** + um **snapshot do estado do odontograma** naquele momento. Serve para acompanhar a evolução do tratamento (scrubber de linha do tempo, foto vs. holograma) e alimenta a **Visualização 3D** e a **geração de vídeo da evolução**.
+
+Features:
+
+- CRUD de sessões por paciente (data, foto, observação e snapshot dos dentes).
+- Upload da foto intraoral para object storage — mesma infra das radiografias (seção 5). Hoje a imagem é comprimida no browser (JPEG ~1280px); o servidor pode reprocessar e gerar thumbnail.
+- Guardar o **snapshot do odontograma** (estado dos 32 dentes na notação FDI) no momento da sessão. É um registro **imutável** daquele dia — não confundir com o odontograma "atual" da seção 3, que é mutável. Permite reconstruir o estado histórico para a linha do tempo e a animação.
+- Listagem ordenada por data (linha do tempo).
+- (Opcional) persistir/servir o vídeo `.webm` gerado, caso a clínica queira guardar — hoje o vídeo é gerado e baixado **no navegador**, nada vai para o servidor.
+
+| Método | Rota | Descrição |
+|--------|------|-----------|
+| GET | `/patients/:id/sessions` | Lista (linha do tempo, ordenada por data) |
+| POST | `/patients/:id/sessions` | Cria (multipart: foto + dados + snapshot) |
+| GET | `/sessions/:id` | Detalhe |
+| DELETE | `/sessions/:id` | Exclui (remove a foto do storage) |
+
+Campos: `pacienteId`, `data` (YYYY-MM-DD), `foto` (arquivo → URL no storage), `observacao`, `dentes` (snapshot `Record<numero, { status, orto?, observacao? }>`), `criadoEm`.
+
+Observações importantes:
+
+- **Visualização 3D (holograma)** e **vídeo da evolução** são **100% client-side** (Three.js carregado via CDN + `MediaRecorder`/canvas). Não exigem backend — apenas consomem os snapshots e as fotos das sessões. O holograma **não** reconstrói a geometria real da boca a partir da foto (isso exigiria scanner intraoral/CBCT); é uma representação ilustrativa colorida pelo estado dos dentes.
+- Reaproveita o **object storage** e as regras de **LGPD** das radiografias (foto intraoral é dado de saúde: consentimento, criptografia em repouso, retenção/exclusão).
+
+---
+
 ## 6. Agenda / Consultas
 
 Espelha `appointmentsService` (list, listByDate, countByDate, countsBetween, create, update, remove).
@@ -207,7 +235,7 @@ Infra necessária: fila de jobs (BullMQ/Sidekiq/Celery), worker agendado, webhoo
 
 ## 8.5 Mensagens / Caixa de entrada unificada
 
-Espelha `inboxService` (connections, connect, disconnect, conversations, messages, reply, markRead, unreadTotal). Hoje é tudo local com dados de exemplo. O objetivo do recurso é **centralizar num só lugar as mensagens das redes da clínica** (WhatsApp, Instagram e Facebook), para o funcionário não precisar abrir um aplicativo de cada vez. O grande trabalho de backend é **integrar de fato** com as plataformas e manter as conversas sincronizadas em tempo real.
+Espelha `inboxService` (connections, connect, disconnect, conversations, messages, reply, markRead, unreadTotal). Hoje é tudo local e **o front inicia vazio** (os dados/conversas de exemplo foram removidos; só permanecem os canais padrão como `desconectado`). O objetivo do recurso é **centralizar num só lugar as mensagens das redes da clínica** (WhatsApp, Instagram e Facebook), para o funcionário não precisar abrir um aplicativo de cada vez. O grande trabalho de backend é **integrar de fato** com as plataformas e manter as conversas sincronizadas em tempo real.
 
 ### 8.5.1 Conexão de canais
 
@@ -409,6 +437,6 @@ Itens que não são de um domínio só, mas precisam existir:
 
 Fase 1 (MVP — paridade com o front): Auth real, Pacientes, Odontograma, Ortodontia, Agenda, Estoque, Radiografias (com storage), Finanças (lançamentos + contas a receber + orçamentos), Dashboard.
 
-Fase 2 (diferencial + monetização): Motor de automações + WhatsApp, **Mensagens / caixa de entrada unificada** (WhatsApp + Instagram + Facebook via Meta API, webhooks e tempo real), lembretes agendados, logs de envio, auditoria, laudo/orçamento em PDF, relatórios financeiros (fluxo de caixa), **Billing/Assinaturas** (gateway de pagamento + enforcement de limites por plano).
+Fase 2 (diferencial + monetização): Motor de automações + WhatsApp, **Mensagens / caixa de entrada unificada** (WhatsApp + Instagram + Facebook via Meta API, webhooks e tempo real), **Sessões clínicas / linha do tempo** (fotos intraorais em storage + snapshots do odontograma; a Visualização 3D e o vídeo da evolução são client-side), lembretes agendados, logs de envio, auditoria, laudo/orçamento em PDF, relatórios financeiros (fluxo de caixa), **Billing/Assinaturas** (gateway de pagamento + enforcement de limites por plano).
 
 Fase 3 (escala/compliance): multi-tenant robusto, papéis/permissões, LGPD completa, relatórios avançados e histórico de movimentações (estoque e financeiro).

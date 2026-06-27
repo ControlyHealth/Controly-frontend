@@ -1,6 +1,6 @@
 # Entidades do Controly
 
-Documento explicativo de todas as entidades (modelos de dados) existentes na aplicação até o momento. As definições vivem em `src/types/index.ts` e são persistidas via `localStorage` (camada `src/lib/storage.ts`), cada uma com seu serviço em `src/services/`.
+Documento explicativo de todas as entidades (modelos de dados) existentes na aplicação até o momento. As definições vivem em `src/types/index.ts` e são persistidas via `localStorage` (camada `src/lib/storage.ts`), cada uma com seu serviço em `src/services/`. Exceção: as **sessões clínicas** (`OdontoSessao`) usam `IndexedDB` (camada `src/lib/idb.ts`) por causa do peso das fotos.
 
 > Convenção: `ID` é uma `string`. Campos marcados com `?` são opcionais. Datas são strings ISO (`criadoEm`, `atualizadoEm`) ou no formato `YYYY-MM-DD` (campos de agenda).
 
@@ -82,6 +82,24 @@ Exames de imagem vinculados a um paciente, com a imagem armazenada localmente em
 | `criadoEm` | `string` | Data de criação |
 
 **RadiografiaTipo:** `panoramica`, `periapical`, `interproximal`, `oclusal`, `telerradiografia`, `tomografia`, `outro`.
+
+---
+
+## OdontoSessao — Sessão clínica / Linha do tempo
+
+Registro de uma sessão do tratamento, com uma foto intraoral e um **snapshot do estado do odontograma** naquele momento. Alimenta a linha do tempo (evolução), a Visualização 3D (holograma) e o vídeo da evolução. Serviço: `src/services/sessions.ts` — persistido em **IndexedDB** (`src/lib/idb.ts`) por causa do peso das fotos.
+
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `id` | `ID` | Identificador |
+| `pacienteId` | `ID` | Paciente da sessão |
+| `data` | `string` | Data da sessão (`YYYY-MM-DD`) |
+| `foto` | `string?` | Foto intraoral comprimida (dataURL JPEG) |
+| `observacao` | `string?` | Anotação da sessão |
+| `dentes` | `Record<number, ToothRecord>` | Snapshot **imutável** do odontograma na data |
+| `criadoEm` | `string` | Data de criação |
+
+Observação: `dentes` é uma cópia do estado do odontograma no momento do registro (histórico), diferente do `Odontograma` "atual" (seção acima), que é mutável. A Visualização 3D e o vídeo são gerados no navegador (Three.js + canvas), sem backend.
 
 ---
 
@@ -174,7 +192,8 @@ Agendamentos de consultas dos pacientes. Serviço: `src/services/appointments.ts
 
 ## Relações entre entidades
 
-- **Patient** é o eixo central: **Odontograma**, **Radiografia**, **OrthoTreatment** e **Appointment** referenciam um paciente via `pacienteId`.
+- **Patient** é o eixo central: **Odontograma**, **Radiografia**, **OdontoSessao**, **OrthoTreatment** e **Appointment** referenciam um paciente via `pacienteId`.
 - **Odontograma** contém vários **ToothRecord** (um por dente).
+- **OdontoSessao** guarda uma cópia (snapshot) dos **ToothRecord** do paciente na data da sessão — histórico imutável que não altera o **Odontograma** atual.
 - **Automation** e **StockItem** são independentes (não ligados a um paciente específico).
 - **User** representa quem opera o sistema, fora do domínio clínico.
