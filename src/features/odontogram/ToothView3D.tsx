@@ -3,6 +3,7 @@ import { RotateCw, RefreshCw, Sparkles, AlertTriangle } from 'lucide-react'
 import type { ToothRecord } from '@/types'
 import { odontogramService } from '@/services/odontogram'
 import { UPPER_ARCH, LOWER_ARCH, toothType } from '@/data/teeth'
+import { buildToothGeometry, toothFootprint } from './toothGeometry'
 import { Card } from '@/components/ui/Card'
 import { cn } from '@/lib/cn'
 
@@ -72,7 +73,7 @@ export function ToothView3D({
 
         const scene = new THREE.Scene()
         const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100)
-        const home = new THREE.Vector3(0, 1.6, 8.5)
+        const home = new THREE.Vector3(0, 1.2, 7.4)
         camera.position.copy(home)
 
         renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true })
@@ -89,43 +90,27 @@ export function ToothView3D({
         scene.add(key, fill)
 
         // base holográfica
-        const grid = new THREE.PolarGridHelper(4.2, 12, 5, 64, 0x1c93bf, 0x0e3a4d)
-        grid.position.y = -2.4
-        ;(grid.material as any).opacity = 0.35
+        const grid = new THREE.PolarGridHelper(4.0, 12, 5, 64, 0x1c93bf, 0x0e3a4d)
+        grid.position.y = -2.2
+        ;(grid.material as any).opacity = 0.3
         ;(grid.material as any).transparent = true
         scene.add(grid)
 
         const root = new THREE.Group()
-        root.rotation.x = -0.18
+        root.rotation.x = 0
         scene.add(root)
 
         function makeTooth(numero: number, isUpper: boolean) {
           const cat = categoria(data.dentes[numero]?.status)
-          if (cat === 'ausente') {
-            // dente ausente: marcador fantasma discreto
-            const geo = new THREE.SphereGeometry(0.18, 10, 8)
-            const mat = new THREE.MeshBasicMaterial({
-              color: COR.ausente.base,
-              transparent: true,
-              opacity: COR.ausente.op,
-              wireframe: true,
-            })
-            disposables.push(geo, mat)
-            return new THREE.Mesh(geo, mat)
-          }
-
           const c = COR[cat]
           const type = toothType(numero)
-          const scale =
-            type === 'molar' ? 1.3 : type === 'premolar' ? 1.02 : type === 'canino' ? 0.96 : 0.82
 
-          const tooth = new THREE.Group()
           const mat = new THREE.MeshStandardMaterial({
             color: c.base,
             emissive: c.emissive,
-            emissiveIntensity: cat === 'afetado' ? 0.9 : 0.45,
+            emissiveIntensity: cat === 'afetado' ? 0.85 : 0.4,
             metalness: 0.1,
-            roughness: 0.25,
+            roughness: 0.3,
             transparent: true,
             opacity: c.op,
           })
@@ -133,38 +118,28 @@ export function ToothView3D({
             color: c.base,
             wireframe: true,
             transparent: true,
-            opacity: cat === 'afetado' ? 0.5 : 0.28,
+            opacity: cat === 'ausente' ? 0.06 : cat === 'afetado' ? 0.45 : 0.22,
           })
           disposables.push(mat, wireMat)
 
-          // coroa
-          const crownGeo = new THREE.SphereGeometry(0.42, 20, 16)
-          crownGeo.scale(1, 0.95, 1)
-          disposables.push(crownGeo)
-          const crown = new THREE.Mesh(crownGeo, mat)
-          crown.position.y = 0.34
-          const crownWire = new THREE.Mesh(crownGeo, wireMat)
-          crownWire.position.y = 0.34
-          crownWire.scale.setScalar(1.03)
+          const geo = buildToothGeometry(THREE, type)
+          disposables.push(geo)
+          const mesh = new THREE.Mesh(geo, mat)
+          const wire = new THREE.Mesh(geo, wireMat)
+          wire.scale.setScalar(1.015)
 
-          // raiz
-          const rootGeo = new THREE.ConeGeometry(0.26, 0.95, 18)
-          disposables.push(rootGeo)
-          const rootMesh = new THREE.Mesh(rootGeo, mat)
-          rootMesh.rotation.x = Math.PI // ápice para baixo
-          rootMesh.position.y = -0.34
-
-          tooth.add(crown, crownWire, rootMesh)
-          tooth.scale.setScalar(scale)
-          if (isUpper) tooth.rotation.x = Math.PI // coroa apontando para baixo
+          const tooth = new THREE.Group()
+          tooth.add(mesh, wire)
+          tooth.scale.setScalar(0.62 * toothFootprint(type))
+          if (isUpper) tooth.rotation.x = Math.PI // coroa apontando para baixo (occlusão)
           return tooth
         }
 
         function placeArch(teeth: number[], y: number, isUpper: boolean) {
           const n = teeth.length
-          const Rx = 3.1
-          const Rz = 3.7
-          const spread = Math.PI * 1.04
+          const Rx = 2.9
+          const Rz = 3.6
+          const spread = Math.PI * 0.92
           teeth.forEach((numero, i) => {
             const t = n > 1 ? i / (n - 1) : 0.5
             const ang = (t - 0.5) * spread
@@ -176,8 +151,8 @@ export function ToothView3D({
           })
         }
 
-        placeArch(UPPER_ARCH, 1.15, true)
-        placeArch(LOWER_ARCH, -1.15, false)
+        placeArch(UPPER_ARCH, 0.55, true)
+        placeArch(LOWER_ARCH, -0.55, false)
 
         const controls = new OrbitControls(camera, renderer.domElement)
         controls.enableDamping = true

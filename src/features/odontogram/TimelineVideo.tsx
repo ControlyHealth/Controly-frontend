@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Film, Download, Loader2, AlertTriangle, Play } from 'lucide-react'
 import type { OdontoSessao } from '@/types'
 import { UPPER_ARCH, LOWER_ARCH, toothType } from '@/data/teeth'
+import { buildToothGeometry, toothFootprint } from './toothGeometry'
 import { formatDate } from '@/lib/format'
 import { Button } from '@/components/ui/Button'
 
@@ -98,7 +99,7 @@ export function TimelineVideo({
 
         const scene = new THREE.Scene()
         const camera = new THREE.PerspectiveCamera(45, W / H, 0.1, 100)
-        camera.position.set(0, 1.4, 8.6)
+        camera.position.set(0, 1.2, 7.4)
         camera.lookAt(0, 0, 0)
 
         scene.add(new THREE.AmbientLight(0x88aabb, 1.1))
@@ -115,7 +116,7 @@ export function TimelineVideo({
         scene.add(grid)
 
         const rootGroup = new THREE.Group()
-        rootGroup.rotation.x = -0.18
+        rootGroup.rotation.x = 0
         scene.add(rootGroup)
 
         // appearance de cada dente por sessão
@@ -128,32 +129,23 @@ export function TimelineVideo({
 
         function build(num: number, isUpper: boolean) {
           const type = toothType(num)
-          const scale =
-            type === 'molar' ? 1.3 : type === 'premolar' ? 1.02 : type === 'canino' ? 0.96 : 0.82
           const mat = new THREE.MeshStandardMaterial({
             transparent: true,
             metalness: 0.1,
-            roughness: 0.25,
+            roughness: 0.3,
           })
           const wire = new THREE.MeshBasicMaterial({ wireframe: true, transparent: true })
           disposables.push(mat, wire)
 
+          const geo = buildToothGeometry(THREE, type)
+          disposables.push(geo)
+          const mesh = new THREE.Mesh(geo, mat)
+          const wireMesh = new THREE.Mesh(geo, wire)
+          wireMesh.scale.setScalar(1.015)
+
           const tooth = new THREE.Group()
-          const crownGeo = new THREE.SphereGeometry(0.42, 20, 16)
-          crownGeo.scale(1, 0.95, 1)
-          disposables.push(crownGeo)
-          const crown = new THREE.Mesh(crownGeo, mat)
-          crown.position.y = 0.34
-          const crownWire = new THREE.Mesh(crownGeo, wire)
-          crownWire.position.y = 0.34
-          crownWire.scale.setScalar(1.03)
-          const rootGeo = new THREE.ConeGeometry(0.26, 0.95, 18)
-          disposables.push(rootGeo)
-          const rootMesh = new THREE.Mesh(rootGeo, mat)
-          rootMesh.rotation.x = Math.PI
-          rootMesh.position.y = -0.34
-          tooth.add(crown, crownWire, rootMesh)
-          tooth.scale.setScalar(scale)
+          tooth.add(mesh, wireMesh)
+          tooth.scale.setScalar(0.62 * toothFootprint(type))
           if (isUpper) tooth.rotation.x = Math.PI
 
           teeth.push({ mat, wire, frames: sessoes.map((s) => apar(num, s)) })
@@ -162,9 +154,9 @@ export function TimelineVideo({
 
         function placeArch(list: number[], y: number, isUpper: boolean) {
           const n = list.length
-          const Rx = 3.1
-          const Rz = 3.7
-          const spread = Math.PI * 1.04
+          const Rx = 2.9
+          const Rz = 3.6
+          const spread = Math.PI * 0.92
           list.forEach((num, i) => {
             const t = n > 1 ? i / (n - 1) : 0.5
             const ang = (t - 0.5) * spread
@@ -175,8 +167,8 @@ export function TimelineVideo({
             rootGroup.add(pivot)
           })
         }
-        placeArch(UPPER_ARCH, 1.15, false)
-        placeArch(LOWER_ARCH, -1.15, true)
+        placeArch(UPPER_ARCH, 0.55, true)
+        placeArch(LOWER_ARCH, -0.55, false)
 
         // cores reutilizáveis
         const cA = new THREE.Color()
