@@ -63,7 +63,6 @@ export function TimelineVideo({
     const disposables: any[] = []
     let recorder: MediaRecorder | null = null
     let stream: MediaStream | null = null
-    const all = [...UPPER_ARCH, ...LOWER_ARCH]
     const N = sessoes.length
     const totalDur = Math.max(0.001, (N - 1) * SEG_DUR) + TAIL
 
