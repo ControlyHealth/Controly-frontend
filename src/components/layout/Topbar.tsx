@@ -8,6 +8,7 @@ const titles: Record<string, string> = {
   '/estoque': 'Gerenciamento de estoque',
   '/financas': 'Finanças',
   '/automacoes': 'Automações via WhatsApp',
+  '/perfil': 'Meu perfil',
 }
 
 export function Topbar() {

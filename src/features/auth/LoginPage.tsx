@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Navigate, useNavigate, Link } from 'react-router-dom'
 import {
   Mail,
@@ -10,7 +10,7 @@ import {
   ShieldCheck,
   Activity,
 } from 'lucide-react'
-import { userService } from '@/services/user'
+import { userService, AuthError } from '@/services/user'
 import { Modal } from '@/components/ui/Modal'
 import Logo from '../../assets/favicon.png'
 import { cn } from '@/lib/cn'
@@ -27,27 +27,57 @@ export function LoginPage() {
   const [showSenha, setShowSenha] = useState(false)
   const [lembrar, setLembrar] = useState(true)
   const [erro, setErro] = useState<string | null>(null)
+  const [campoErro, setCampoErro] = useState<'email' | 'senha' | null>(null)
   const [loading, setLoading] = useState(false)
   const [forgotOpen, setForgotOpen] = useState(false)
+
+  // limpa o erro assim que o usuário volta a digitar
+  function limparErro() {
+    if (erro) {
+      setErro(null)
+      setCampoErro(null)
+    }
+  }
+
+  // logout involuntário (ex.: sessão expirada) deixa um motivo para exibir
+  useEffect(() => {
+    if (userService.takeAuthReason() === 'expired') {
+      setErro('Sua sessão expirou. Entre novamente.')
+    }
+  }, [])
 
   if (userService.isAuthenticated()) {
     return <Navigate to="/" replace />
   }
 
-  function entrar(emailLogin: string) {
-    setLoading(true)
-    setTimeout(() => {
-      userService.login({ email: emailLogin })
-      navigate('/', { replace: true })
-    }, 450)
-  }
-
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!isEmail(email)) return setErro('Informe um e-mail válido.')
-    if (senha.length < 4) return setErro('A senha deve ter ao menos 4 caracteres.')
+    if (!senha) return setErro('Informe sua senha.')
     setErro(null)
-    entrar(email)
+    setCampoErro(null)
+    setLoading(true)
+    setTimeout(() => {
+      try {
+        userService.login(email, senha)
+        // sem assinatura ativa? completa o fluxo antes do dashboard
+        navigate(userService.hasActiveSubscription() ? '/' : '/planos', { replace: true })
+      } catch (err) {
+        const code = err instanceof AuthError ? err.code : null
+        setCampoErro(code === 'EMAIL_NOT_FOUND' ? 'email' : code === 'INVALID_PASSWORD' ? 'senha' : null)
+        setErro(err instanceof Error ? err.message : 'Não foi possível entrar.')
+        setLoading(false)
+      }
+    }, 450)
+  }
+
+  function entrarComoVisitante() {
+    setErro(null)
+    setLoading(true)
+    setTimeout(() => {
+      userService.loginAsGuest()
+      navigate('/', { replace: true })
+    }, 450)
   }
 
   return (
@@ -142,12 +172,14 @@ export function LoginPage() {
                 <input
                   type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => { setEmail(e.target.value); limparErro() }}
                   placeholder="voce@email.com"
-                  className={inputBase}
+                  aria-invalid={campoErro === 'email'}
+                  className={cn(inputBase, campoErro === 'email' && 'border-red-300 focus:border-red-400 focus:ring-red-100')}
                   autoFocus
                 />
               </div>
+              {campoErro === 'email' && <p className="mt-1.5 text-xs text-red-500">{erro}</p>}
             </div>
 
             <div>
@@ -168,9 +200,10 @@ export function LoginPage() {
                 <input
                   type={showSenha ? 'text' : 'password'}
                   value={senha}
-                  onChange={(e) => setSenha(e.target.value)}
+                  onChange={(e) => { setSenha(e.target.value); limparErro() }}
                   placeholder="••••••••"
-                  className={cn(inputBase, 'pr-11')}
+                  aria-invalid={campoErro === 'senha'}
+                  className={cn(inputBase, 'pr-11', campoErro === 'senha' && 'border-red-300 focus:border-red-400 focus:ring-red-100')}
                 />
                 <button
                   type="button"
@@ -181,6 +214,7 @@ export function LoginPage() {
                   {showSenha ? <EyeOff size={17} /> : <Eye size={17} />}
                 </button>
               </div>
+              {campoErro === 'senha' && <p className="mt-1.5 text-xs text-red-500">{erro}</p>}
             </div>
 
             <button
@@ -206,7 +240,7 @@ export function LoginPage() {
               Manter conectado
             </button>
 
-            {erro && (
+            {erro && !campoErro && (
               <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{erro}</p>
             )}
 
@@ -234,7 +268,7 @@ export function LoginPage() {
             <button
               type="button"
               disabled={loading}
-              onClick={() => entrar('visitante@controly.app')}
+              onClick={entrarComoVisitante}
               className="flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white font-medium text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-70 cursor-pointer"
             >
               Entrar como visitante
@@ -243,8 +277,8 @@ export function LoginPage() {
 
           <p className="mt-6 text-center text-sm text-slate-500">
             Ainda não tem conta?{' '}
-            <Link to="/planos" className="font-semibold text-brand-600 hover:text-brand-700">
-              Ver planos
+            <Link to="/register" className="font-semibold text-brand-600 hover:text-brand-700">
+              Criar conta
             </Link>
           </p>
 

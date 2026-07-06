@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, Users, Bot, Package, CalendarDays, Wallet, LogOut, ChevronUp, MessagesSquare } from 'lucide-react'
+import { LayoutDashboard, Users, Bot, Package, CalendarDays, Wallet, LogOut, ChevronUp, MessagesSquare, UserRound } from 'lucide-react'
 import Logo from "../../assets/favicon.png"
 import { userService } from '@/services/user'
 import { inboxService } from '@/services/inbox'
@@ -66,13 +66,24 @@ export function Sidebar() {
       </nav>
       <div className="border-t border-slate-100 p-3">
         {menuOpen && (
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="mb-2 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 cursor-pointer"
-          >
-            <LogOut size={16} /> Sair
-          </button>
+          <div className="mb-2 space-y-1">
+            {!userService.isGuest() && (
+              <button
+                type="button"
+                onClick={() => { setMenuOpen(false); navigate('/perfil') }}
+                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900 cursor-pointer"
+              >
+                <UserRound size={16} /> Editar perfil
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 cursor-pointer"
+            >
+              <LogOut size={16} /> Sair
+            </button>
+          </div>
         )}
         <button
           type="button"

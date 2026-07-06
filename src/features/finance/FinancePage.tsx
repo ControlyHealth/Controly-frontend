@@ -30,6 +30,7 @@ import { TransactionForm, CATEGORY_LABEL, METHOD_LABEL } from './TransactionForm
 import { OrcamentoForm, ORCAMENTO_STATUS_LABEL } from './OrcamentoForm'
 import { formatBRL, formatDate, initials } from '@/lib/format'
 import { cn } from '@/lib/cn'
+import { toast } from '@/lib/toast'
 
 type Tab = 'lancamentos' | 'receber' | 'orcamentos'
 
@@ -76,35 +77,41 @@ export function FinancePage() {
     setTxModal(true)
   }
   function submitTx(data: TransactionInput) {
+    const editing = !!txEditing
     if (txEditing) financeService.update(txEditing.id, data)
     else financeService.create(data)
     setTxModal(false)
     setTxEditing(undefined)
     refresh()
+    toast.success(editing ? 'Lançamento atualizado.' : 'Lançamento criado.')
   }
   function receber(t: Transaction) {
     financeService.setStatus(t.id, 'pago')
     refresh()
+    toast.success(t.tipo === 'receita' ? 'Recebimento confirmado.' : 'Pagamento confirmado.')
   }
 
   // ---- handlers orçamentos ----
   function submitOrc(data: OrcamentoInput) {
+    const editing = !!orcEditing
     if (orcEditing) orcamentosService.update(orcEditing.id, data)
     else orcamentosService.create(data)
     setOrcModal(false)
     setOrcEditing(undefined)
     refresh()
+    toast.success(editing ? 'Orçamento atualizado.' : 'Orçamento criado.')
   }
   function aprovar(o: Orcamento) {
     orcamentosService.approve(o.id)
     refresh()
+    toast.success('Orçamento aprovado.')
   }
 
   const cards = [
-    { label: 'Recebido', value: summary.recebido, icon: TrendingUp, color: 'bg-emerald-50 text-emerald-600' },
-    { label: 'A receber', value: summary.aReceber, icon: Clock, color: 'bg-amber-50 text-amber-600' },
-    { label: 'Despesas pagas', value: summary.despesasPagas, icon: TrendingDown, color: 'bg-red-50 text-red-600' },
-    { label: 'Saldo', value: summary.saldo, icon: Wallet, color: 'bg-brand-50 text-brand-600' },
+    { label: 'Recebido', value: summary.recebido, icon: TrendingUp, color: 'bg-brand-50 text-brand-600' },
+    { label: 'A receber', value: summary.aReceber, icon: Clock, color: 'bg-sky-50 text-sky-600' },
+    { label: 'Despesas pagas', value: summary.despesasPagas, icon: TrendingDown, color: 'bg-slate-100 text-slate-500' },
+    { label: 'Saldo', value: summary.saldo, icon: Wallet, color: 'bg-brand-600 text-white' },
   ]
 
   const tabs: { id: Tab; label: string; count?: number }[] = [
@@ -186,10 +193,11 @@ export function FinancePage() {
               icon={<Wallet size={40} />}
               title="Nenhum lançamento"
               description="Registre receitas e despesas da clínica."
-              action={<Button onClick={() => openTx('receita')}><Plus size={16} /> Novo lançamento</Button>}
+              action={<Button onClick={() => openTx(tipoFiltro === 'despesa' ? 'despesa' : 'receita')}><Plus size={16} /> Novo lançamento</Button>}
             />
           ) : (
-            <Card className="overflow-x-auto">
+            <>
+            <Card className="hidden overflow-x-auto md:block">
               <table className="w-full min-w-[680px] text-sm">
                 <thead>
                   <tr className="border-b border-slate-100 text-left text-xs uppercase tracking-wide text-slate-400">
@@ -264,6 +272,68 @@ export function FinancePage() {
                 </tbody>
               </table>
             </Card>
+
+            {/* mobile: cards empilhados no lugar da tabela */}
+            <div className="space-y-2 md:hidden">
+              {filtered.map((t) => {
+                const receita = t.tipo === 'receita'
+                return (
+                  <Card key={t.id} className="p-4">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="truncate font-medium text-slate-800">{t.descricao}</p>
+                        <p className="mt-0.5 text-xs text-slate-500">
+                          {CATEGORY_LABEL[t.categoria]} · {formatDate(t.data)}
+                          {nomePaciente(t.pacienteId) ? ` · ${nomePaciente(t.pacienteId)}` : ''}
+                        </p>
+                      </div>
+                      <span className={cn('shrink-0 font-semibold tabular-nums', receita ? 'text-emerald-600' : 'text-red-600')}>
+                        {receita ? '+' : '−'} {formatBRL(t.valor)}
+                      </span>
+                    </div>
+                    <div className="mt-3 flex items-center justify-between">
+                      <span
+                        className={cn(
+                          'inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium',
+                          t.status === 'pago' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700',
+                        )}
+                      >
+                        {t.status === 'pago' ? (receita ? 'Recebido' : 'Pago') : 'Pendente'}
+                      </span>
+                      <div className="flex items-center gap-1">
+                        {t.status === 'pendente' && (
+                          <button
+                            type="button"
+                            onClick={() => receber(t)}
+                            className="rounded-lg p-1.5 text-emerald-500 hover:bg-emerald-50 cursor-pointer"
+                            aria-label="Marcar como pago"
+                          >
+                            <Check size={15} />
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => { setTxEditing(t); setTxModal(true) }}
+                          className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 cursor-pointer"
+                          aria-label="Editar"
+                        >
+                          <Pencil size={15} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setTxDelete(t)}
+                          className="rounded-lg p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600 cursor-pointer"
+                          aria-label="Excluir"
+                        >
+                          <Trash2 size={15} />
+                        </button>
+                      </div>
+                    </div>
+                  </Card>
+                )
+              })}
+            </div>
+            </>
           )}
         </div>
       )}
@@ -281,7 +351,7 @@ export function FinancePage() {
             <>
               <Card className="flex items-center justify-between p-4">
                 <span className="text-sm font-medium text-slate-600">Total a receber</span>
-                <span className="text-xl font-bold text-amber-600">{formatBRL(totalReceber)}</span>
+                <span className="text-xl font-bold text-sky-600">{formatBRL(totalReceber)}</span>
               </Card>
               <div className="space-y-2">
                 {receivables.map((t) => {
@@ -427,7 +497,7 @@ export function FinancePage() {
         title="Excluir lançamento"
         description={<>Excluir <strong>{txDelete?.descricao}</strong>?</>}
         confirmLabel="Excluir"
-        onConfirm={() => { if (txDelete) financeService.remove(txDelete.id); setTxDelete(undefined); refresh() }}
+        onConfirm={() => { if (txDelete) financeService.remove(txDelete.id); setTxDelete(undefined); refresh(); toast.success('Lançamento excluído.') }}
         onClose={() => setTxDelete(undefined)}
       />
 
@@ -436,7 +506,7 @@ export function FinancePage() {
         title="Excluir orçamento"
         description="Tem certeza que deseja excluir este orçamento?"
         confirmLabel="Excluir"
-        onConfirm={() => { if (orcDelete) orcamentosService.remove(orcDelete.id); setOrcDelete(undefined); refresh() }}
+        onConfirm={() => { if (orcDelete) orcamentosService.remove(orcDelete.id); setOrcDelete(undefined); refresh(); toast.success('Orçamento excluído.') }}
         onClose={() => setOrcDelete(undefined)}
       />
     </div>

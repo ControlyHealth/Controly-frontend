@@ -26,3 +26,22 @@ body {
 }
 
 * { box-sizing: border-box; }
+
+/* ---- Acessibilidade ---- */
+
+/* Foco visível ao navegar por teclado (não aparece no clique do mouse).
+   :where() mantém a especificidade zero, então componentes podem sobrepor. */
+:where(a, button, input, select, textarea, summary, [role="button"], [role="tab"], [role="switch"], [tabindex]):focus-visible {
+  outline: 2px solid var(--color-brand-600);
+  outline-offset: 2px;
+}
+
+/* Respeita quem prefere menos movimento: neutraliza animações e transições. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
