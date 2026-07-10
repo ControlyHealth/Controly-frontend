@@ -12,6 +12,8 @@ import { EmptyState } from '@/components/ui/EmptyState'
 import { StockForm, CATEGORY_LABEL } from './StockForm'
 import { formatDate, pluralizar } from '@/lib/format'
 import { cn } from '@/lib/cn'
+import { anunciar, registrar } from '@/services/notifications'
+import { toast } from '@/lib/toast'
 
 function isExpiringSoon(validade?: string): boolean {
   if (!validade) return false
@@ -48,8 +50,19 @@ export function StockPage() {
   }
 
   function handleSubmit(data: StockInput) {
-    if (editing) stockService.update(editing.id, data)
-    else stockService.create(data)
+    try {
+      if (editing) {
+        stockService.update(editing.id, data)
+        anunciar('estoque', 'Item do estoque atualizado.', data.nome)
+      } else {
+        stockService.create(data)
+        anunciar('estoque', 'Item registrado no estoque.', `${data.nome} · ${data.quantidade} ${pluralizar(data.quantidade, data.unidade)}`)
+      }
+    } catch (e) {
+      // duplicidade: mantém o formulário aberto para o usuário corrigir
+      toast.error(e instanceof Error ? e.message : 'Não foi possível salvar o item.')
+      return
+    }
     setModalOpen(false)
     setEditing(undefined)
     refresh()
@@ -58,13 +71,19 @@ export function StockPage() {
   function confirmDelete() {
     if (toDelete) {
       stockService.remove(toDelete.id)
+      anunciar('estoque', 'Item removido do estoque.', toDelete.nome)
       setToDelete(undefined)
       refresh()
     }
   }
 
   function adjust(i: StockItem, delta: number) {
-    stockService.adjust(i.id, delta)
+    const antes = i.quantidade
+    const depois = stockService.adjust(i.id, delta)
+    // alerta (só na central, sem toast) quando o item cruza para o nível mínimo
+    if (depois && antes > i.minimo && depois.quantidade <= i.minimo) {
+      registrar('estoque', 'Estoque baixo.', `${i.nome} chegou ao nível mínimo (${depois.quantidade} ${pluralizar(depois.quantidade, i.unidade)}).`)
+    }
     refresh()
   }
 
@@ -136,7 +155,8 @@ export function StockPage() {
           }
         />
       ) : (
-        <Card className="overflow-x-auto">
+        <>
+        <Card className="hidden overflow-x-auto md:block">
           <table className="w-full min-w-[680px] text-sm">
             <thead>
               <tr className="border-b border-slate-100 text-left text-xs uppercase tracking-wide text-slate-400">
@@ -230,6 +250,85 @@ export function StockPage() {
             </tbody>
           </table>
         </Card>
+
+        {/* mobile: cards empilhados substituem a tabela */}
+        <div className="space-y-2 md:hidden">
+          {filtered.map((i) => {
+            const low = i.quantidade <= i.minimo
+            return (
+              <Card key={i.id} className="p-4">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="truncate font-medium text-slate-800">{i.nome}</p>
+                    <p className="mt-0.5 text-xs text-slate-400">
+                      {CATEGORY_LABEL[i.categoria]}
+                      {i.fornecedor ? ` · ${i.fornecedor}` : ''} · mín. {i.minimo}{' '}
+                      {pluralizar(i.minimo, i.unidade)}
+                    </p>
+                    {i.validade && (
+                      <p
+                        className={cn(
+                          'mt-0.5 text-xs',
+                          isExpiringSoon(i.validade) ? 'font-medium text-amber-600' : 'text-slate-500',
+                        )}
+                      >
+                        Validade: {formatDate(i.validade)}
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex shrink-0 items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditing(i)
+                        setModalOpen(true)
+                      }}
+                      className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 cursor-pointer"
+                      aria-label="Editar"
+                    >
+                      <Pencil size={15} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setToDelete(i)}
+                      className="rounded-lg p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600 cursor-pointer"
+                      aria-label="Remover"
+                    >
+                      <Trash2 size={15} />
+                    </button>
+                  </div>
+                </div>
+                <div className="mt-3 flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => adjust(i, -1)}
+                    className="rounded-md border border-slate-200 p-1 text-slate-500 hover:bg-slate-100 cursor-pointer"
+                    aria-label="Diminuir"
+                  >
+                    <Minus size={14} />
+                  </button>
+                  <Badge
+                    className={cn(
+                      'min-w-14 justify-center tabular-nums',
+                      low ? 'bg-red-100 text-red-700' : 'bg-slate-100 text-slate-700',
+                    )}
+                  >
+                    {i.quantidade} {pluralizar(i.quantidade, i.unidade)}
+                  </Badge>
+                  <button
+                    type="button"
+                    onClick={() => adjust(i, 1)}
+                    className="rounded-md border border-slate-200 p-1 text-slate-500 hover:bg-slate-100 cursor-pointer"
+                    aria-label="Aumentar"
+                  >
+                    <Plus size={14} />
+                  </button>
+                </div>
+              </Card>
+            )
+          })}
+        </div>
+        </>
       )}
 
       <Modal

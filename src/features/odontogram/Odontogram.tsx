@@ -9,6 +9,7 @@ import { RotateCcw, MousePointerClick } from 'lucide-react'
 import { Tooth } from './Tooth'
 import { ToothPanel } from './ToothPanel'
 import { Legend } from './Legend'
+import { anunciar } from '@/services/notifications'
 
 export function Odontogram({ pacienteId }: { pacienteId: string }) {
   const [chart, setChart] = useState<Odontograma>(() => odontogramService.get(pacienteId))
@@ -21,11 +22,13 @@ export function Odontogram({ pacienteId }: { pacienteId: string }) {
   ) {
     const updated = odontogramService.setTooth(pacienteId, numero, patch)
     setChart({ ...updated, dentes: { ...updated.dentes } })
+    anunciar('clinico', `Dente ${numero} atualizado no odontograma.`)
     setSelected(null)
   }
 
   function handleReset() {
     setChart(odontogramService.reset(pacienteId))
+    anunciar('clinico', 'Odontograma reiniciado.')
     setSelected(null)
     setConfirmReset(false)
   }

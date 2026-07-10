@@ -8,6 +8,7 @@ import { Field, Input, Select, Textarea } from '@/components/ui/Input'
 import { Badge } from '@/components/ui/Badge'
 import { formatDate } from '@/lib/format'
 import { cn } from '@/lib/cn'
+import { anunciar } from '@/services/notifications'
 
 export const APPLIANCE_LABEL: Record<OrthoAppliance, string> = {
   metalico: 'Aparelho fixo metálico',
@@ -60,6 +61,7 @@ export function OrthoPanel({ pacienteId }: { pacienteId: string }) {
   function handleSave() {
     const saved = orthoService.save(pacienteId, form)
     setSalvoEm(saved.atualizadoEm)
+    anunciar('clinico', 'Plano ortodôntico salvo.', ORTHO_STATUS_LABEL[form.status])
   }
 
   return (

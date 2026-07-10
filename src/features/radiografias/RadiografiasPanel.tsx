@@ -9,6 +9,7 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { Field, Select, Textarea } from '@/components/ui/Input'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { formatDate } from '@/lib/format'
+import { anunciar } from '@/services/notifications'
 
 export const RADIO_TIPO_LABEL: Record<RadiografiaTipo, string> = {
   panoramica: 'Panorâmica',
@@ -88,6 +89,7 @@ function NovaRadiografiaForm({
   function handleSave() {
     try {
       radiografiasService.create({ pacienteId, tipo, data, observacao: observacao.trim(), imagem, nomeArquivo })
+      anunciar('clinico', 'Radiografia registrada.', RADIO_TIPO_LABEL[tipo])
       onDone()
     } catch {
       setErro('Falha ao salvar — a imagem pode ser grande demais para o armazenamento local.')
@@ -182,6 +184,7 @@ export function RadiografiasPanel({ pacienteId }: { pacienteId: string }) {
   function confirmDelete() {
     if (toDelete) {
       radiografiasService.remove(pacienteId, toDelete.id)
+      anunciar('clinico', 'Radiografia removida.', RADIO_TIPO_LABEL[toDelete.tipo])
       setToDelete(null)
       force((n) => n + 1)
     }

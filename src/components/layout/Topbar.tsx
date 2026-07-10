@@ -1,4 +1,5 @@
-import { useLocation, Link } from 'react-router-dom'
+import { useLocation } from 'react-router-dom'
+import { NotificationsBell } from './NotificationsBell'
 
 const titles: Record<string, string> = {
   '/': 'Dashboard',
@@ -19,13 +20,8 @@ export function Topbar() {
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-slate-200 bg-white/80 px-4 backdrop-blur md:px-8">
-      <h1 className="text-lg font-semibold text-slate-800">{title}</h1>
-      <Link
-        to="/pacientes"
-        className="md:hidden text-sm font-medium text-brand-600"
-      >
-        Pacientes
-      </Link>
+      <h1 className="truncate text-lg font-semibold text-slate-800">{title}</h1>
+      <NotificationsBell />
     </header>
   )
 }

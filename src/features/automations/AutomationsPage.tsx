@@ -9,6 +9,8 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { AutomationForm } from './AutomationForm'
 import { TRIGGER_LABELS } from './triggers'
+import { anunciar } from '@/services/notifications'
+import { toast } from '@/lib/toast'
 
 export function AutomationsPage() {
   const [items, setItems] = useState<Automation[]>(() => automationsService.list())
@@ -19,6 +21,7 @@ export function AutomationsPage() {
   function confirmDelete() {
     if (toDelete) {
       automationsService.remove(toDelete.id)
+      anunciar('automacao', 'Automação removida.', toDelete.nome)
       setToDelete(undefined)
       refresh()
     }
@@ -29,8 +32,19 @@ export function AutomationsPage() {
   }
 
   function handleSubmit(data: AutomationInput) {
-    if (editing) automationsService.update(editing.id, data)
-    else automationsService.create(data)
+    try {
+      if (editing) {
+        automationsService.update(editing.id, data)
+        anunciar('automacao', 'Automação atualizada.', data.nome)
+      } else {
+        automationsService.create(data)
+        anunciar('automacao', 'Automação criada.', data.nome)
+      }
+    } catch (e) {
+      // duplicidade: mantém o formulário aberto para o usuário corrigir
+      toast.error(e instanceof Error ? e.message : 'Não foi possível salvar a automação.')
+      return
+    }
     setModalOpen(false)
     setEditing(undefined)
     refresh()
@@ -82,7 +96,7 @@ export function AutomationsPage() {
                   </div>
                 </div>
                 <button
-                  onClick={() => { automationsService.toggle(a.id); refresh() }}
+                  onClick={() => { automationsService.toggle(a.id); anunciar('automacao', a.ativo ? 'Automação desativada.' : 'Automação ativada.', a.nome); refresh() }}
                   className={
                     'relative h-6 w-11 shrink-0 rounded-full transition cursor-pointer ' +
                     (a.ativo ? 'bg-green-500' : 'bg-slate-300')

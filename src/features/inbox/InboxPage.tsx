@@ -1,5 +1,5 @@
 import { useMemo, useState, type ReactNode } from 'react'
-import { Inbox, Plug, Send, MessagesSquare } from 'lucide-react'
+import { Inbox, Plug, Send, MessagesSquare, ChevronLeft } from 'lucide-react'
 import type { Conversation, MessageChannel } from '@/types'
 import { inboxService } from '@/services/inbox'
 import { CHANNELS, CHANNEL_ORDER } from './channels'
@@ -120,8 +120,8 @@ export function InboxPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[340px_1fr]">
-        {/* Lista de conversas */}
-        <Card className="overflow-hidden">
+        {/* Lista de conversas (no mobile é ocultada quando há conversa aberta) */}
+        <Card className={'overflow-hidden' + (selecionada ? ' hidden lg:block' : '')}>
           {conversas.length === 0 ? (
             <div className="p-6">
               <EmptyState
@@ -179,8 +179,8 @@ export function InboxPage() {
           )}
         </Card>
 
-        {/* Thread da conversa */}
-        <Card className="flex min-h-[420px] flex-col">
+        {/* Thread da conversa (no mobile some enquanto nada está selecionado) */}
+        <Card className={'min-h-[420px] flex-col' + (selecionada ? ' flex' : ' hidden lg:flex')}>
           {!selecionada ? (
             <div className="flex flex-1 items-center justify-center p-6">
               <EmptyState
@@ -192,6 +192,14 @@ export function InboxPage() {
           ) : (
             <>
               <div className="flex items-center gap-3 border-b border-slate-100 px-4 py-3">
+                <button
+                  type="button"
+                  onClick={() => setSelectedId(null)}
+                  className="-ml-1 rounded-lg p-1 text-slate-500 hover:bg-slate-100 hover:text-slate-700 cursor-pointer lg:hidden"
+                  aria-label="Voltar para conversas"
+                >
+                  <ChevronLeft size={20} />
+                </button>
                 <span className="relative shrink-0">
                   <span className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-600">
                     {initials(selecionada.contato.replace('@', ''))}

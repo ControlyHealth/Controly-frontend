@@ -30,7 +30,7 @@ import { TransactionForm, CATEGORY_LABEL, METHOD_LABEL } from './TransactionForm
 import { OrcamentoForm, ORCAMENTO_STATUS_LABEL } from './OrcamentoForm'
 import { formatBRL, formatDate, initials } from '@/lib/format'
 import { cn } from '@/lib/cn'
-import { toast } from '@/lib/toast'
+import { anunciar } from '@/services/notifications'
 
 type Tab = 'lancamentos' | 'receber' | 'orcamentos'
 
@@ -83,12 +83,12 @@ export function FinancePage() {
     setTxModal(false)
     setTxEditing(undefined)
     refresh()
-    toast.success(editing ? 'Lançamento atualizado.' : 'Lançamento criado.')
+    anunciar('financeiro', editing ? 'Lançamento atualizado.' : 'Lançamento criado.', `${data.descricao} · ${formatBRL(data.valor)}`)
   }
   function receber(t: Transaction) {
     financeService.setStatus(t.id, 'pago')
     refresh()
-    toast.success(t.tipo === 'receita' ? 'Recebimento confirmado.' : 'Pagamento confirmado.')
+    anunciar('financeiro', t.tipo === 'receita' ? 'Recebimento confirmado.' : 'Pagamento confirmado.', `${t.descricao} · ${formatBRL(t.valor)}`)
   }
 
   // ---- handlers orçamentos ----
@@ -99,12 +99,12 @@ export function FinancePage() {
     setOrcModal(false)
     setOrcEditing(undefined)
     refresh()
-    toast.success(editing ? 'Orçamento atualizado.' : 'Orçamento criado.')
+    anunciar('financeiro', editing ? 'Orçamento atualizado.' : 'Orçamento criado.', nomePaciente(data.pacienteId))
   }
   function aprovar(o: Orcamento) {
     orcamentosService.approve(o.id)
     refresh()
-    toast.success('Orçamento aprovado.')
+    anunciar('financeiro', 'Orçamento aprovado.', [nomePaciente(o.pacienteId), formatBRL(orcamentoTotal(o))].filter(Boolean).join(' · '))
   }
 
   const cards = [
@@ -357,11 +357,11 @@ export function FinancePage() {
                 {receivables.map((t) => {
                   const atrasado = t.vencimento && t.vencimento < hoje
                   return (
-                    <Card key={t.id} className="flex items-center gap-3 p-4">
+                    <Card key={t.id} className="flex flex-wrap items-center gap-3 p-4 sm:flex-nowrap">
                       <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-100 text-xs font-semibold text-brand-700">
                         {nomePaciente(t.pacienteId) ? initials(nomePaciente(t.pacienteId)!) : <User size={16} />}
                       </span>
-                      <div className="min-w-0 flex-1">
+                      <div className="min-w-[9rem] flex-1 sm:min-w-0">
                         <p className="truncate font-medium text-slate-800">{t.descricao}</p>
                         <p className="text-xs text-slate-400">
                           {nomePaciente(t.pacienteId) ?? 'Sem paciente'}
@@ -497,7 +497,7 @@ export function FinancePage() {
         title="Excluir lançamento"
         description={<>Excluir <strong>{txDelete?.descricao}</strong>?</>}
         confirmLabel="Excluir"
-        onConfirm={() => { if (txDelete) financeService.remove(txDelete.id); setTxDelete(undefined); refresh(); toast.success('Lançamento excluído.') }}
+        onConfirm={() => { if (txDelete) { financeService.remove(txDelete.id); anunciar('financeiro', 'Lançamento excluído.', txDelete.descricao) } setTxDelete(undefined); refresh() }}
         onClose={() => setTxDelete(undefined)}
       />
 
@@ -506,7 +506,7 @@ export function FinancePage() {
         title="Excluir orçamento"
         description="Tem certeza que deseja excluir este orçamento?"
         confirmLabel="Excluir"
-        onConfirm={() => { if (orcDelete) orcamentosService.remove(orcDelete.id); setOrcDelete(undefined); refresh(); toast.success('Orçamento excluído.') }}
+        onConfirm={() => { if (orcDelete) { orcamentosService.remove(orcDelete.id); anunciar('financeiro', 'Orçamento excluído.', nomePaciente(orcDelete.pacienteId)) } setOrcDelete(undefined); refresh() }}
         onClose={() => setOrcDelete(undefined)}
       />
     </div>

@@ -20,8 +20,10 @@ import { Modal } from '@/components/ui/Modal'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { AppointmentForm, APPT_STATUS_LABEL } from './AppointmentForm'
-import { initials } from '@/lib/format'
+import { initials, formatDate } from '@/lib/format'
 import { cn } from '@/lib/cn'
+import { anunciar } from '@/services/notifications'
+import { toast } from '@/lib/toast'
 
 // Identidade visual de cada status: ponto, chip e barra lateral do card.
 const STATUS: Record<AppointmentStatus, { dot: string; chip: string; bar: string }> = {
@@ -91,29 +93,53 @@ export function AgendaPage() {
   }
 
   function handleSubmit(data: AppointmentInput) {
-    if (editing) appointmentsService.update(editing.id, data)
-    else appointmentsService.create(data)
+    const nome = patientsService.get(data.pacienteId)?.nome
+    const detalhe = [nome, `${formatDate(data.data)} às ${data.inicio}`].filter(Boolean).join(' · ')
+    try {
+      if (editing) {
+        appointmentsService.update(editing.id, data)
+        anunciar('consulta', 'Consulta atualizada.', detalhe)
+      } else {
+        appointmentsService.create(data)
+        anunciar('consulta', 'Consulta agendada.', detalhe)
+      }
+    } catch (e) {
+      // conflito de horário: mantém o formulário aberto para o usuário corrigir
+      toast.error(e instanceof Error ? e.message : 'Não foi possível salvar a consulta.')
+      return
+    }
     refresh()
   }
 
   function confirmDelete() {
     if (toDelete) {
       appointmentsService.remove(toDelete.id)
+      const nome = patientsService.get(toDelete.pacienteId)?.nome
+      anunciar('consulta', 'Consulta excluída.', [nome, `${formatDate(toDelete.data)} às ${toDelete.inicio}`].filter(Boolean).join(' · '))
       setToDelete(undefined)
       setVersion((v) => v + 1)
     }
   }
 
   function changeStatus(a: Appointment, status: AppointmentStatus) {
-    appointmentsService.update(a.id, {
-      pacienteId: a.pacienteId,
-      data: a.data,
-      inicio: a.inicio,
-      fim: a.fim,
-      procedimento: a.procedimento,
-      status,
-      observacao: a.observacao,
-    })
+    try {
+      appointmentsService.update(a.id, {
+        pacienteId: a.pacienteId,
+        data: a.data,
+        inicio: a.inicio,
+        fim: a.fim,
+        procedimento: a.procedimento,
+        status,
+        observacao: a.observacao,
+      })
+    } catch (e) {
+      // reativar uma consulta cancelada pode gerar conflito de horário
+      toast.error(e instanceof Error ? e.message : 'Não foi possível alterar o status.')
+      setStatusMenu(null)
+      return
+    }
+    const nome = patientsService.get(a.pacienteId)?.nome
+    anunciar('consulta', `Consulta marcada como "${APPT_STATUS_LABEL[status]}".`, [nome, `${formatDate(a.data)} às ${a.inicio}`].filter(Boolean).join(' · '))
     setStatusMenu(null)
     setVersion((v) => v + 1)
   }
@@ -280,31 +306,31 @@ export function AgendaPage() {
                 className="group relative overflow-visible transition hover:shadow-md hover:-translate-y-px"
               >
                 <span className={cn('absolute left-0 top-0 h-full w-1.5 rounded-l-xl', st.bar)} />
-                <div className="flex items-center gap-4 py-5 pl-6 pr-4">
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-2 py-4 pl-5 pr-3 sm:flex-nowrap sm:gap-4 sm:py-5 sm:pl-6 sm:pr-4">
                   {/* horário */}
-                  <div className="flex w-20 shrink-0 flex-col items-center">
+                  <div className="flex w-16 shrink-0 flex-col items-center sm:w-20">
                     <span className="flex items-center gap-1 text-base font-bold text-slate-800">
                       <Clock size={14} className="text-slate-400" /> {a.inicio}
                     </span>
                     <span className="text-sm text-slate-400">{a.fim}</span>
                   </div>
 
-                  <span className="h-12 w-px shrink-0 bg-slate-100" />
+                  <span className="hidden h-12 w-px shrink-0 bg-slate-100 sm:block" />
 
                   {/* paciente */}
-                  <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-brand-100 text-sm font-semibold text-brand-700">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-100 text-xs font-semibold text-brand-700 sm:h-14 sm:w-14 sm:text-sm">
                     {paciente ? initials(paciente.nome) : <User size={20} />}
                   </span>
-                  <div className="min-w-0 flex-1">
+                  <div className="min-w-[8rem] flex-1 sm:min-w-0">
                     {paciente ? (
                       <Link
                         to={`/pacientes/${paciente.id}`}
-                        className="block truncate text-lg font-semibold text-slate-800 hover:text-brand-600"
+                        className="block truncate text-base font-semibold text-slate-800 hover:text-brand-600 sm:text-lg"
                       >
                         {paciente.nome}
                       </Link>
                     ) : (
-                      <span className="text-lg font-medium text-slate-400">Paciente removido</span>
+                      <span className="text-base font-medium text-slate-400 sm:text-lg">Paciente removido</span>
                     )}
                     <p className="truncate text-sm text-slate-500">
                       {a.procedimento || 'Sem procedimento definido'}
@@ -327,7 +353,7 @@ export function AgendaPage() {
                     {statusMenu === a.id && (
                       <>
                         <div className="fixed inset-0 z-10" onClick={() => setStatusMenu(null)} />
-                        <div className="absolute right-0 top-full z-20 mt-1 w-44 overflow-hidden rounded-xl border border-slate-100 bg-white py-1 shadow-lg">
+                        <div className="absolute left-0 top-full z-20 mt-1 w-44 overflow-hidden rounded-xl border border-slate-100 bg-white py-1 shadow-lg sm:left-auto sm:right-0">
                           {STATUS_LIST.map((s) => (
                             <button
                               key={s}
@@ -345,8 +371,8 @@ export function AgendaPage() {
                     )}
                   </div>
 
-                  {/* ações (aparecem no hover) */}
-                  <div className="flex shrink-0 items-center gap-1 opacity-0 transition group-hover:opacity-100">
+                  {/* ações (sempre visíveis no touch; no desktop aparecem no hover) */}
+                  <div className="flex shrink-0 items-center gap-1 transition sm:opacity-0 sm:group-hover:opacity-100">
                     <button
                       type="button"
                       onClick={() => {

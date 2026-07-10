@@ -11,6 +11,8 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { PatientForm } from './PatientForm'
 import { formatDate, initials } from '@/lib/format'
+import { anunciar } from '@/services/notifications'
+import { toast } from '@/lib/toast'
 
 export function PatientsPage() {
   const [patients, setPatients] = useState<Patient[]>(() => patientsService.list())
@@ -36,8 +38,19 @@ export function PatientsPage() {
   }
 
   function handleSubmit(data: PatientInput) {
-    if (editing) patientsService.update(editing.id, data)
-    else patientsService.create(data)
+    try {
+      if (editing) {
+        patientsService.update(editing.id, data)
+        anunciar('paciente', 'Paciente atualizado.', data.nome)
+      } else {
+        patientsService.create(data)
+        anunciar('paciente', 'Paciente cadastrado com sucesso.', data.nome)
+      }
+    } catch (e) {
+      // duplicidade: mantém o formulário aberto para o usuário corrigir
+      toast.error(e instanceof Error ? e.message : 'Não foi possível salvar o paciente.')
+      return
+    }
     setModalOpen(false)
     setEditing(undefined)
     refresh()
@@ -46,6 +59,7 @@ export function PatientsPage() {
   function confirmDelete() {
     if (toDelete) {
       patientsService.remove(toDelete.id)
+      anunciar('paciente', 'Paciente removido.', toDelete.nome)
       setToDelete(undefined)
       refresh()
     }

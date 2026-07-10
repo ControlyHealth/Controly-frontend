@@ -6,6 +6,7 @@ import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Field, Input, Select } from '@/components/ui/Input'
 import { toast } from '@/lib/toast'
+import { anunciar } from '@/services/notifications'
 import { formatDate } from '@/lib/format'
 import {
   maskCPF,
@@ -130,7 +131,7 @@ export function ProfilePage() {
           }
       userService.save(patch)
       setSaving(false)
-      toast.success('Perfil atualizado.')
+      anunciar('sistema', 'Perfil atualizado.')
     }, 400)
   }
 

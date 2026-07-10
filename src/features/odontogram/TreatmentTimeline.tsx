@@ -22,6 +22,7 @@ import { ToothView3D } from './ToothView3D'
 import { TimelineVideo } from './TimelineVideo'
 import { formatDate } from '@/lib/format'
 import { cn } from '@/lib/cn'
+import { anunciar } from '@/services/notifications'
 
 const hoje = () => new Date().toISOString().slice(0, 10)
 
@@ -84,6 +85,7 @@ export function TreatmentTimeline({ pacienteId }: { pacienteId: string }) {
       const input: SessaoInput = { pacienteId, data, observacao: obs }
       if (fotoFile) input.foto = await compressImage(fotoFile)
       const nova = await sessionsService.create(input)
+      anunciar('clinico', 'Sessão de tratamento registrada.', formatDate(data))
       setModalOpen(false)
       resetForm()
       await carregar(false)
@@ -95,6 +97,7 @@ export function TreatmentTimeline({ pacienteId }: { pacienteId: string }) {
 
   async function excluir(s: OdontoSessao) {
     await sessionsService.remove(s.id)
+    anunciar('clinico', 'Sessão de tratamento excluída.', formatDate(s.data))
     setConfirmDel(null)
     const restantes = sessoes.filter((x) => x.id !== s.id)
     setSessoes(restantes)

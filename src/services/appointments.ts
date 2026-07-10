@@ -1,6 +1,7 @@
 import type { Appointment } from '@/types'
 import { readStore, writeStore } from '@/lib/storage'
 import { uid } from '@/lib/id'
+import { RegraDeNegocioError } from '@/lib/dedupe'
 
 const KEY = 'appointments'
 
@@ -17,6 +18,25 @@ function byTime(a: Appointment, b: Appointment): number {
 }
 
 export type AppointmentInput = Omit<Appointment, 'id' | 'criadoEm' | 'atualizadoEm'>
+
+/**
+ * Regra de negócio: agenda única — dois atendimentos não podem se sobrepor
+ * no mesmo dia. Consultas canceladas não ocupam horário. `ignorarId` exclui
+ * o próprio registro em edições.
+ */
+function validarConflito(input: AppointmentInput, ignorarId?: string): void {
+  if (input.status === 'cancelado') return
+  for (const a of load()) {
+    if (a.id === ignorarId) continue
+    if (a.data !== input.data || a.status === 'cancelado') continue
+    // sobreposição de intervalos [inicio, fim)
+    if (input.inicio < a.fim && input.fim > a.inicio) {
+      throw new RegraDeNegocioError(
+        `Conflito de horário: já existe uma consulta das ${a.inicio} às ${a.fim} neste dia.`,
+      )
+    }
+  }
+}
 
 export const appointmentsService = {
   list(): Appointment[] {
@@ -39,6 +59,7 @@ export const appointmentsService = {
     return map
   },
   create(input: AppointmentInput): Appointment {
+    validarConflito(input)
     const now = new Date().toISOString()
     const appt: Appointment = { ...input, id: uid(), criadoEm: now, atualizadoEm: now }
     persist([...load(), appt])
@@ -48,7 +69,13 @@ export const appointmentsService = {
     const list = load()
     const idx = list.findIndex((a) => a.id === id)
     if (idx === -1) return undefined
-    const updated: Appointment = { ...list[idx], ...input, atualizadoEm: new Date().toISOString() }
+    const atual = list[idx]
+    // só revalida o conflito se dia/horário mudaram — assim uma simples troca
+    // de status em dados antigos (anteriores à regra) nunca fica bloqueada
+    const horarioMudou =
+      atual.data !== input.data || atual.inicio !== input.inicio || atual.fim !== input.fim
+    if (horarioMudou || atual.status === 'cancelado') validarConflito(input, id)
+    const updated: Appointment = { ...atual, ...input, atualizadoEm: new Date().toISOString() }
     list[idx] = updated
     persist(list)
     return updated
