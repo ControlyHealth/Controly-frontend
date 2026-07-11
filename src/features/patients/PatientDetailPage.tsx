@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { ArrowLeft, Phone, Mail, Calendar, IdCard, MessageCircle } from 'lucide-react'
+import { ArrowLeft, Phone, Mail, Calendar, IdCard, MessageCircle, Lock } from 'lucide-react'
+import { userService } from '@/services/user'
+import { PaywallInline } from '@/features/plans/Paywall'
 import { patientsService } from '@/services/patients'
 import { odontogramService } from '@/services/odontogram'
 import { STATUS_META, ORTO_META } from '@/data/teeth'
@@ -60,6 +62,11 @@ export function PatientDetailPage() {
 
   const tabs: Tab[] = ['panorama', 'odontograma', 'visualizacao3d', 'linhadotempo', 'ortodontia', 'radiografias', 'observacoes']
 
+  // abas do pacote clínico avançado (gate por plano)
+  const ABAS_AVANCADAS: Tab[] = ['visualizacao3d', 'linhadotempo', 'ortodontia', 'radiografias']
+  const temClinicoAvancado = userService.hasFeature('clinico_avancado')
+  const abaBloqueada = (t: Tab) => ABAS_AVANCADAS.includes(t) && !temClinicoAvancado
+
   return (
     <div className="space-y-4">
       <Link to="/pacientes" className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700">
@@ -106,13 +113,14 @@ export function PatientDetailPage() {
             key={t}
             onClick={() => setTab(t)}
             className={
-              'whitespace-nowrap border-b-2 px-4 py-2 text-sm font-medium transition cursor-pointer ' +
+              'inline-flex items-center gap-1.5 whitespace-nowrap border-b-2 px-4 py-2 text-sm font-medium transition cursor-pointer ' +
               (tab === t
                 ? 'border-brand-600 text-brand-700'
                 : 'border-transparent text-slate-500 hover:text-slate-700')
             }
           >
             {t === 'observacoes' ? `${TAB_LABEL[t]} (${notas.length})` : TAB_LABEL[t]}
+            {abaBloqueada(t) && <Lock size={12} className="text-slate-400" aria-label="Disponível em planos superiores" />}
           </button>
         ))}
       </div>
@@ -121,13 +129,19 @@ export function PatientDetailPage() {
 
       {tab === 'odontograma' && <Odontogram pacienteId={id} />}
 
-      {tab === 'visualizacao3d' && <ToothView3D pacienteId={id} />}
+      {abaBloqueada(tab) ? (
+        <PaywallInline feature="clinico_avancado" />
+      ) : (
+        <>
+          {tab === 'visualizacao3d' && <ToothView3D pacienteId={id} />}
 
-      {tab === 'linhadotempo' && <TreatmentTimeline pacienteId={id} />}
+          {tab === 'linhadotempo' && <TreatmentTimeline pacienteId={id} />}
 
-      {tab === 'ortodontia' && <OrthoPanel pacienteId={id} />}
+          {tab === 'ortodontia' && <OrthoPanel pacienteId={id} />}
 
-      {tab === 'radiografias' && <RadiografiasPanel pacienteId={id} />}
+          {tab === 'radiografias' && <RadiografiasPanel pacienteId={id} />}
+        </>
+      )}
 
       {tab === 'observacoes' && (
         <Card className="divide-y divide-slate-100">

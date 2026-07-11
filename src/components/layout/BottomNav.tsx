@@ -12,23 +12,25 @@ import {
   LogOut,
   Menu,
   X,
+  Lock,
 } from 'lucide-react'
+import type { Feature } from '@/lib/entitlements'
 import { userService } from '@/services/user'
 import { inboxService } from '@/services/inbox'
 import { initials } from '@/lib/format'
 import { cn } from '@/lib/cn'
 
-const mainLinks = [
+const mainLinks: { to: string; label: string; icon: typeof Users; end: boolean; feature?: Feature }[] = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
   { to: '/pacientes', label: 'Pacientes', icon: Users, end: false },
-  { to: '/mensagens', label: 'Mensagens', icon: MessagesSquare, end: false },
+  { to: '/mensagens', label: 'Mensagens', icon: MessagesSquare, end: false, feature: 'mensagens' },
   { to: '/agenda', label: 'Agenda', icon: CalendarDays, end: false },
 ]
 
-const moreLinks = [
+const moreLinks: { to: string; label: string; icon: typeof Users; feature?: Feature }[] = [
   { to: '/estoque', label: 'Estoque', icon: Package },
   { to: '/financas', label: 'Finanças', icon: Wallet },
-  { to: '/automacoes', label: 'Automações', icon: Bot },
+  { to: '/automacoes', label: 'Automações', icon: Bot, feature: 'automacoes' },
 ]
 
 export function BottomNav() {
@@ -82,23 +84,28 @@ export function BottomNav() {
               </button>
             </div>
             <nav className="space-y-1">
-              {moreLinks.map(({ to, label, icon: Icon }) => (
-                <NavLink
-                  key={to}
-                  to={to}
-                  className={({ isActive }) =>
-                    cn(
-                      'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
-                      isActive
-                        ? 'bg-brand-50 text-brand-700'
-                        : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900',
-                    )
-                  }
-                >
-                  <Icon size={18} />
-                  <span className="flex-1">{label}</span>
-                </NavLink>
-              ))}
+              {moreLinks.map(({ to, label, icon: Icon, feature }) => {
+                const bloqueado = feature ? !userService.hasFeature(feature) : false
+                return (
+                  <NavLink
+                    key={to}
+                    to={to}
+                    className={({ isActive }) =>
+                      cn(
+                        'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                        isActive
+                          ? 'bg-brand-50 text-brand-700'
+                          : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900',
+                        bloqueado && 'opacity-70',
+                      )
+                    }
+                  >
+                    <Icon size={18} />
+                    <span className="flex-1">{label}</span>
+                    {bloqueado && <Lock size={13} className="shrink-0 text-slate-400" />}
+                  </NavLink>
+                )
+              })}
               {!userService.isGuest() && (
                 <button
                   type="button"
@@ -124,29 +131,40 @@ export function BottomNav() {
         className="fixed inset-x-0 bottom-0 z-40 flex h-16 items-stretch border-t border-slate-200 bg-white pb-[env(safe-area-inset-bottom)] md:hidden"
         aria-label="Navegação principal"
       >
-        {mainLinks.map(({ to, label, icon: Icon, end }) => (
-          <NavLink
-            key={to}
-            to={to}
-            end={end}
-            className={({ isActive }) =>
-              cn(
-                'flex flex-1 flex-col items-center justify-center gap-0.5 text-[11px] font-medium transition-colors',
-                isActive ? 'text-brand-700' : 'text-slate-500 hover:text-slate-700',
-              )
-            }
-          >
-            <span className="relative">
-              <Icon size={20} />
-              {to === '/mensagens' && naoLidas > 0 && (
-                <span className="absolute -right-2 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-brand-600 px-1 text-[10px] font-semibold text-white">
-                  {naoLidas}
-                </span>
-              )}
-            </span>
-            {label}
-          </NavLink>
-        ))}
+        {mainLinks.map(({ to, label, icon: Icon, end, feature }) => {
+          const bloqueado = feature ? !userService.hasFeature(feature) : false
+          return (
+            <NavLink
+              key={to}
+              to={to}
+              end={end}
+              className={({ isActive }) =>
+                cn(
+                  'flex flex-1 flex-col items-center justify-center gap-0.5 text-[11px] font-medium transition-colors',
+                  isActive ? 'text-brand-700' : 'text-slate-500 hover:text-slate-700',
+                  bloqueado && 'opacity-70',
+                )
+              }
+            >
+              <span className="relative">
+                <Icon size={20} />
+                {bloqueado ? (
+                  <Lock
+                    size={11}
+                    className="absolute -right-2 -top-1 rounded-full bg-white text-slate-400"
+                  />
+                ) : (
+                  to === '/mensagens' && naoLidas > 0 && (
+                    <span className="absolute -right-2 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-brand-600 px-1 text-[10px] font-semibold text-white">
+                      {naoLidas}
+                    </span>
+                  )
+                )}
+              </span>
+              {label}
+            </NavLink>
+          )
+        })}
         <button
           type="button"
           onClick={() => setMoreOpen((v) => !v)}

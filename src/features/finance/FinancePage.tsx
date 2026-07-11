@@ -11,7 +11,10 @@ import {
   FileText,
   User,
   CheckCircle2,
+  Lock,
 } from 'lucide-react'
+import { userService } from '@/services/user'
+import { PaywallInline } from '@/features/plans/Paywall'
 import type { Transaction, Orcamento, TransactionType } from '@/types'
 import {
   financeService,
@@ -66,6 +69,7 @@ export function FinancePage() {
 
   const refresh = () => setVersion((v) => v + 1)
   const nomePaciente = (id?: string) => (id ? patientsService.get(id)?.nome : undefined)
+  const temOrcamentos = userService.hasFeature('orcamentos')
 
   const filtered = transactions.filter((t) => tipoFiltro === 'todos' || t.tipo === tipoFiltro)
   const totalReceber = receivables.reduce((s, t) => s + t.valor, 0)
@@ -159,13 +163,16 @@ export function FinancePage() {
             key={t.id}
             onClick={() => setTab(t.id)}
             className={cn(
-              'whitespace-nowrap border-b-2 px-4 py-2 text-sm font-medium transition cursor-pointer',
+              'inline-flex items-center gap-1.5 whitespace-nowrap border-b-2 px-4 py-2 text-sm font-medium transition cursor-pointer',
               tab === t.id
                 ? 'border-brand-600 text-brand-700'
                 : 'border-transparent text-slate-500 hover:text-slate-700',
             )}
           >
             {t.label} {t.count !== undefined && <span className="text-slate-400">({t.count})</span>}
+            {t.id === 'orcamentos' && !temOrcamentos && (
+              <Lock size={12} className="text-slate-400" aria-label="Disponível em planos superiores" />
+            )}
           </button>
         ))}
       </div>
@@ -386,7 +393,8 @@ export function FinancePage() {
       )}
 
       {/* ----- Orçamentos ----- */}
-      {tab === 'orcamentos' && (
+      {tab === 'orcamentos' && !temOrcamentos && <PaywallInline feature="orcamentos" />}
+      {tab === 'orcamentos' && temOrcamentos && (
         <div className="space-y-4">
           <div className="flex justify-end">
             <Button onClick={() => { setOrcEditing(undefined); setOrcModal(true) }}>

@@ -18,6 +18,7 @@ import type { User } from '@/types'
 import { readStore, writeStore } from '@/lib/storage'
 import { session } from '@/lib/session'
 import { uid } from '@/lib/id'
+import { planHasFeature, type Feature } from '@/lib/entitlements'
 
 // ---------------------------------------------------------------- tipos
 
@@ -217,6 +218,22 @@ export const userService = {
 
   hasActiveSubscription(): boolean {
     return this.currentAccount()?.subscription?.status === 'active'
+  },
+
+  /** Id do plano da assinatura ativa (ou undefined). */
+  currentPlanId(): string | undefined {
+    const sub = this.currentAccount()?.subscription
+    return sub?.status === 'active' ? sub.planId : undefined
+  },
+
+  /**
+   * O plano do usuário libera este recurso?
+   * Visitante (demo) enxerga tudo — a demo existe para mostrar o produto.
+   * Sem assinatura ativa, nada é liberado (o RequireAuth já barra antes).
+   */
+  hasFeature(feature: Feature): boolean {
+    if (this.isGuest()) return true
+    return planHasFeature(this.currentPlanId(), feature)
   },
 
   /** Conta demo/visitante (acesso restrito). */

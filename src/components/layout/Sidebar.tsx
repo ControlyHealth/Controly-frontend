@@ -1,20 +1,21 @@
 import { useState } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, Users, Bot, Package, CalendarDays, Wallet, LogOut, ChevronUp, MessagesSquare, UserRound } from 'lucide-react'
+import { LayoutDashboard, Users, Bot, Package, CalendarDays, Wallet, LogOut, ChevronUp, MessagesSquare, UserRound, Lock } from 'lucide-react'
+import type { Feature } from '@/lib/entitlements'
 import Logo from "../../assets/favicon.png"
 import { userService } from '@/services/user'
 import { inboxService } from '@/services/inbox'
 import { initials } from '@/lib/format'
 import { cn } from '@/lib/cn'
 
-const links = [
+const links: { to: string; label: string; icon: typeof Users; end: boolean; feature?: Feature }[] = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
   { to: '/pacientes', label: 'Pacientes', icon: Users, end: false },
-  { to: '/mensagens', label: 'Mensagens', icon: MessagesSquare, end: false },
+  { to: '/mensagens', label: 'Mensagens', icon: MessagesSquare, end: false, feature: 'mensagens' },
   { to: '/agenda', label: 'Agenda', icon: CalendarDays, end: false },
   { to: '/estoque', label: 'Estoque', icon: Package, end: false },
   { to: '/financas', label: 'Finanças', icon: Wallet, end: false },
-  { to: '/automacoes', label: 'Automações', icon: Bot, end: false },
+  { to: '/automacoes', label: 'Automações', icon: Bot, end: false, feature: 'automacoes' },
 ]
 
 export function Sidebar() {
@@ -40,29 +41,37 @@ export function Sidebar() {
         </div>
       </div>
       <nav className="flex-1 space-y-1 p-3">
-        {links.map(({ to, label, icon: Icon, end }) => (
-          <NavLink
-            key={to}
-            to={to}
-            end={end}
-            className={({ isActive }) =>
-              cn(
-                'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
-                isActive
-                  ? 'bg-brand-50 text-brand-700'
-                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900',
-              )
-            }
-          >
-            <Icon size={18} />
-            <span className="flex-1">{label}</span>
-            {to === '/mensagens' && naoLidas > 0 && (
-              <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-600 px-1.5 text-[11px] font-semibold text-white">
-                {naoLidas}
-              </span>
-            )}
-          </NavLink>
-        ))}
+        {links.map(({ to, label, icon: Icon, end, feature }) => {
+          const bloqueado = feature ? !userService.hasFeature(feature) : false
+          return (
+            <NavLink
+              key={to}
+              to={to}
+              end={end}
+              className={({ isActive }) =>
+                cn(
+                  'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                  isActive
+                    ? 'bg-brand-50 text-brand-700'
+                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900',
+                  bloqueado && 'opacity-70',
+                )
+              }
+            >
+              <Icon size={18} />
+              <span className="flex-1">{label}</span>
+              {bloqueado ? (
+                <Lock size={13} className="shrink-0 text-slate-400" aria-label="Disponível em planos superiores" />
+              ) : (
+                to === '/mensagens' && naoLidas > 0 && (
+                  <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-600 px-1.5 text-[11px] font-semibold text-white">
+                    {naoLidas}
+                  </span>
+                )
+              )}
+            </NavLink>
+          )
+        })}
       </nav>
       <div className="border-t border-slate-100 p-3">
         {menuOpen && (

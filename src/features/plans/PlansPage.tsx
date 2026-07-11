@@ -1,6 +1,20 @@
 import { useMemo, useState } from 'react'
 import { Navigate, useNavigate, Link } from 'react-router-dom'
-import { Check, ArrowLeft, Stethoscope, Users, Building2, ShieldCheck, X, LogOut } from 'lucide-react'
+import {
+  Check,
+  ArrowLeft,
+  Stethoscope,
+  Sparkles,
+  Rocket,
+  Users,
+  Building2,
+  ShieldCheck,
+  Star,
+  Clock,
+  CreditCard,
+  X,
+  LogOut,
+} from 'lucide-react'
 import { cn } from '@/lib/cn'
 import { userService, type BillingCycle, type DentistQuantity } from '@/services/user'
 
@@ -16,13 +30,49 @@ interface Plan {
 
 const DENTIST_PLANS: Plan[] = [
   {
-    id: 'individual',
-    name: 'Individual',
+    id: 'essencial',
+    name: 'Essencial',
     icon: Stethoscope,
-    audience: 'Dentista autônomo',
+    audience: 'Para começar com o pé direito.',
+    monthly: 89,
+    capacity: 1,
+    features: [
+      'Agenda inteligente com lembretes',
+      'Prontuário digital e odontograma',
+      'Controle financeiro básico',
+      'Suporte por e-mail',
+    ],
+  },
+  {
+    id: 'profissional',
+    name: 'Profissional',
+    icon: Sparkles,
+    audience: 'O equilíbrio perfeito entre preço e recursos.',
     monthly: 129,
     capacity: 1,
-    features: ['Agenda e lembretes', 'Prontuário e odontograma', 'Financeiro', 'Relatórios', 'Assistente de IA', 'Suporte por e-mail'],
+    features: [
+      'Tudo do Essencial',
+      'Automações via WhatsApp',
+      'Assistente de IA',
+      'Radiografias e evolução 3D do tratamento',
+      'Relatórios completos',
+      'Suporte prioritário',
+    ],
+  },
+  {
+    id: 'performance',
+    name: 'Performance',
+    icon: Rocket,
+    audience: 'Para quem quer escalar a agenda.',
+    monthly: 189,
+    capacity: 1,
+    features: [
+      'Tudo do Profissional',
+      'Caixa de mensagens unificada (WhatsApp, Instagram e Facebook)',
+      'Relatórios avançados de crescimento',
+      'Onboarding assistido',
+      'Suporte via WhatsApp',
+    ],
   },
 ]
 
@@ -31,16 +81,16 @@ const CLINIC_PLANS: Plan[] = [
     id: 'clinic_start',
     name: 'Clínica Start',
     icon: Users,
-    audience: 'Até 2 dentistas',
+    audience: 'Até 2 dentistas · para começar organizado.',
     monthly: 219,
     capacity: 2,
-    features: ['Tudo do Individual', 'Até 2 dentistas', 'Multiusuário', 'Caixa de mensagens', 'Relatórios financeiros'],
+    features: ['Tudo do Profissional', 'Até 2 dentistas', 'Multiusuário', 'Caixa de mensagens unificada', 'Relatórios financeiros'],
   },
   {
     id: 'clinic_pro',
     name: 'Clínica Pro',
-    icon: Users,
-    audience: 'Até 5 dentistas',
+    icon: Sparkles,
+    audience: 'Até 5 dentistas · ferramentas que proporcionam crescimento.',
     monthly: 349,
     capacity: 5,
     features: ['Tudo do Start', 'Até 5 dentistas', 'Automações via WhatsApp', 'Controle de estoque avançado', 'Suporte prioritário'],
@@ -49,7 +99,7 @@ const CLINIC_PLANS: Plan[] = [
     id: 'clinic_premium',
     name: 'Clínica Premium',
     icon: Building2,
-    audience: 'Até 10 dentistas',
+    audience: 'Até 10 dentistas · para ir além da eficiência.',
     monthly: 599,
     capacity: 10,
     features: ['Tudo do Pro', 'Até 10 dentistas', 'Múltiplas unidades', 'Relatórios gerenciais', 'Onboarding assistido'],
@@ -58,7 +108,7 @@ const CLINIC_PLANS: Plan[] = [
     id: 'clinic_enterprise',
     name: 'Enterprise',
     icon: Building2,
-    audience: 'Mais de 10 dentistas',
+    audience: 'Mais de 10 dentistas · operação sob medida.',
     monthly: null,
     capacity: Infinity,
     features: ['Tudo do Premium', 'Dentistas ilimitados', 'Integrações sob medida', 'Gerente de conta', 'SLA e suporte premium'],
@@ -68,8 +118,34 @@ const CLINIC_PLANS: Plan[] = [
 /** Mínimo de dentistas que o plano precisa comportar, por faixa escolhida. */
 const NEED: Record<DentistQuantity, number> = { '1': 1, '2-5': 5, '6-10': 10, '11-20': 20, '20+': 21 }
 
+/** Anual = 10 mensalidades (2 meses grátis) ⇒ 17% OFF sobre o preço mensal. */
+const OFF_PCT = '17% OFF'
+
+const RECOMMENDED: Record<string, string> = { dentist: 'profissional', clinic: 'clinic_pro' }
+
+const FAQ: { q: string; a: string }[] = [
+  {
+    q: 'Posso trocar de plano depois?',
+    a: 'Sim. Você pode fazer upgrade ou downgrade a qualquer momento — a diferença é calculada proporcionalmente ao período restante.',
+  },
+  {
+    q: 'Como funciona o desconto do plano anual?',
+    a: 'No anual você paga o equivalente a 10 mensalidades e usa por 12 meses — 2 meses grátis, o que dá 17% de desconto sobre o preço mensal.',
+  },
+  {
+    q: 'Meus dados e os dos pacientes estão seguros?',
+    a: 'Sim. Dados sensíveis (CPF, contatos, prontuário) são criptografados com AES-256 no banco de dados, em conformidade com a LGPD.',
+  },
+  {
+    q: 'Existe fidelidade ou multa de cancelamento?',
+    a: 'Não. Você pode cancelar quando quiser, direto no painel, sem multa e sem precisar falar com ninguém.',
+  },
+]
+
 const fmt = (v: number) =>
   v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 })
+const fmt2 = (v: number) =>
+  v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2 })
 
 export function PlansPage() {
   const navigate = useNavigate()
@@ -78,157 +154,321 @@ export function PlansPage() {
 
   const [ciclo, setCiclo] = useState<BillingCycle>('anual')
   const [checkout, setCheckout] = useState<Plan | null>(null)
+  const [segmento, setSegmento] = useState<'dentista' | 'clinica'>('dentista')
   const anual = ciclo === 'anual'
 
   const perfil: 'dentist' | 'clinic' | 'public' = acc?.accountType ?? 'public'
 
   // planos exibidos conforme o perfil (e a quantidade de dentistas da clínica)
   const { planos, recommendedId } = useMemo(() => {
-    if (perfil === 'dentist') return { planos: DENTIST_PLANS, recommendedId: 'individual' }
+    if (perfil === 'dentist') return { planos: DENTIST_PLANS, recommendedId: RECOMMENDED.dentist }
     if (perfil === 'clinic') {
       const need = acc?.dentistQuantity ? NEED[acc.dentistQuantity] : 1
       const fits = CLINIC_PLANS.filter((p) => p.capacity >= need)
       const list = fits.length ? fits : [CLINIC_PLANS[CLINIC_PLANS.length - 1]]
-      return { planos: list, recommendedId: list[0].id }
+      const rec = list.some((p) => p.id === RECOMMENDED.clinic) ? RECOMMENDED.clinic : list[0].id
+      return { planos: list, recommendedId: rec }
     }
-    return { planos: [...DENTIST_PLANS, ...CLINIC_PLANS], recommendedId: 'clinic_pro' }
-  }, [perfil, acc])
+    // público: segmentado por audiência
+    return segmento === 'dentista'
+      ? { planos: DENTIST_PLANS, recommendedId: RECOMMENDED.dentist }
+      : { planos: CLINIC_PLANS, recommendedId: RECOMMENDED.clinic }
+  }, [perfil, acc, segmento])
 
-  // já tem assinatura ativa → não faz sentido ficar aqui
-  if (authed && userService.hasActiveSubscription()) {
+  // assinante ativo pode (e deve) entrar aqui — é a página de upgrade.
+  // Visitante demo não tem o que assinar; volta para o painel.
+  const assinante = authed && userService.hasActiveSubscription()
+  const planoAtualId = assinante ? userService.currentPlanId() : undefined
+  if (authed && userService.isGuest()) {
     return <Navigate to="/" replace />
   }
 
   const mesEquivalente = (m: number) => (anual ? Math.round((m * 10) / 12) : m)
   const totalAnual = (m: number) => m * 10
-  const economia = (m: number) => m * 2 // 2 meses grátis no anual
+  const economiaAnual = (m: number) => m * 2
 
   function sair() {
     userService.logout()
     navigate('/login', { replace: true })
   }
 
-  const titulo =
-    perfil === 'clinic'
-      ? 'Escolha o plano da sua clínica'
-      : perfil === 'dentist'
-        ? 'Ative seu plano e comece a usar'
-        : 'Planos que crescem com você'
+  const titulo = assinante
+    ? 'Faça upgrade e desbloqueie mais recursos'
+    : authed
+      ? 'Assine agora e destrave o painel da sua clínica'
+      : 'Menos papelada. Mais pacientes na cadeira.'
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
+    <div className="min-h-screen bg-slate-100 text-slate-900">
       {authed ? (
-        <button
-          onClick={sair}
-          className="absolute right-6 top-6 z-20 inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700 cursor-pointer"
-        >
-          <LogOut size={16} /> Sair
-        </button>
+        <>
+          {assinante && (
+            <Link
+              to="/"
+              aria-label="Voltar ao painel"
+              className="absolute left-6 top-6 z-20 inline-flex h-9 w-9 items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-white hover:text-slate-700"
+            >
+              <ArrowLeft size={20} />
+            </Link>
+          )}
+          <button
+            onClick={sair}
+            className="absolute right-6 top-6 z-20 inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium text-slate-500 transition-colors hover:bg-white hover:text-slate-700 cursor-pointer"
+          >
+            <LogOut size={16} /> Sair
+          </button>
+        </>
       ) : (
         <Link
           to="/login"
           aria-label="Voltar"
-          className="absolute left-6 top-6 z-20 inline-flex h-9 w-9 items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
+          className="absolute left-6 top-6 z-20 inline-flex h-9 w-9 items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-white hover:text-slate-700"
         >
           <ArrowLeft size={20} />
         </Link>
       )}
 
-      <div className="mx-auto flex max-w-6xl flex-col px-6 py-14">
-        <h1 className="text-balance text-center text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+      {/* ----- cabeçalho (fundo cinza) ----- */}
+      <header className="mx-auto max-w-3xl px-6 pt-16 text-center">
+        <h1 className="text-balance text-4xl font-extrabold tracking-tight text-slate-900 sm:text-5xl">
           {titulo}
         </h1>
-        {authed && (
-          <p className="mt-2 text-center text-sm text-slate-500">
-            Seu cadastro foi criado. Falta só ativar um plano para liberar o painel.
-          </p>
-        )}
+        <p className="mx-auto mt-4 max-w-xl text-pretty text-slate-500">
+          {assinante
+            ? 'O upgrade é imediato e você não perde nenhum dado — seus pacientes, agenda e financeiro continuam exatamente onde estão.'
+            : authed
+              ? 'Seu cadastro foi criado. Escolha seu plano e garanta acesso contínuo às ferramentas que simplificam sua rotina.'
+              : 'Agenda, prontuário, estoque e finanças em um lugar só. Escolha seu plano e comece hoje.'}
+        </p>
 
-        {/* toggle mensal / anual (global) */}
-        <div className="mt-8 flex items-center justify-center">
-          <div role="tablist" aria-label="Ciclo de cobrança" className="inline-flex items-center rounded-full bg-white p-1 text-sm font-medium shadow-sm ring-1 ring-slate-200">
-            <button
-              role="tab"
-              aria-selected={!anual}
-              onClick={() => setCiclo('mensal')}
-              className={cn('rounded-full px-4 py-1.5 transition-colors cursor-pointer', !anual ? 'bg-brand-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-700')}
+        {/* prova social */}
+        <div className="mt-6 flex flex-col items-center justify-center gap-2 sm:flex-row sm:gap-3">
+          <div className="flex -space-x-2" aria-hidden="true">
+            {['AM', 'RC', 'JP', 'LF'].map((ini, i) => (
+              <span
+                key={ini}
+                className={cn(
+                  'flex h-8 w-8 items-center justify-center rounded-full text-[10px] font-bold text-white ring-2 ring-slate-100',
+                  ['bg-brand-600', 'bg-sky-500', 'bg-indigo-500', 'bg-teal-500'][i],
+                )}
+              >
+                {ini}
+              </span>
+            ))}
+          </div>
+          <div className="flex items-center gap-1.5 text-sm text-slate-600">
+            <span className="flex text-amber-400" aria-label="4,9 de 5 estrelas">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <Star key={i} size={14} fill="currentColor" strokeWidth={0} />
+              ))}
+            </span>
+            <span>
+              <strong className="font-semibold text-slate-800">4,9/5</strong> · usado por centenas de dentistas no Brasil
+            </span>
+          </div>
+        </div>
+      </header>
+
+      {/* ----- segmento (só no público) ----- */}
+      {perfil === 'public' && (
+        <div className="mx-auto mt-10 flex justify-center px-6">
+          <div className="inline-flex items-center rounded-xl bg-white p-1 text-sm font-semibold shadow-sm ring-1 ring-slate-200">
+            {(
+              [
+                ['dentista', 'Para você, dentista'],
+                ['clinica', 'Para sua clínica'],
+              ] as const
+            ).map(([id, label]) => (
+              <button
+                key={id}
+                onClick={() => setSegmento(id)}
+                className={cn(
+                  'rounded-lg px-5 py-2 transition-colors cursor-pointer',
+                  segmento === id ? 'bg-brand-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-700',
+                )}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ----- toggle anual/mensal (centralizado; anotação em absolute não desloca) ----- */}
+      <div className={cn('relative mx-auto flex max-w-6xl items-center justify-center px-6', perfil === 'public' ? 'mt-8' : 'mt-12')}>
+        <div className="relative">
+          {/* anotação manuscrita apontando para o "Anual" */}
+          <div
+            className="pointer-events-none absolute -left-44 -top-10 hidden select-none flex-col items-end sm:flex"
+            aria-hidden="true"
+          >
+            <span className="font-script -rotate-6 whitespace-nowrap text-2xl font-semibold leading-none text-slate-700">
+              assine com desconto!
+            </span>
+            <svg
+              width="40" height="34" viewBox="0 0 40 34" fill="none"
+              className="-mr-9 mt-0.5 text-brand-600"
             >
-              Mensal
-            </button>
+              <path
+                d="M4 3c12 2 21 10 24 24m0 0l-7-5m7 5l7-5"
+                stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+              />
+            </svg>
+          </div>
+          <div
+            role="tablist"
+            aria-label="Ciclo de cobrança"
+            className="inline-flex items-center rounded-xl bg-white p-1.5 text-sm font-medium shadow-sm ring-1 ring-slate-200"
+          >
             <button
               role="tab"
               aria-selected={anual}
               onClick={() => setCiclo('anual')}
-              className={cn('inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 transition-colors cursor-pointer', anual ? 'bg-brand-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-700')}
+              className={cn(
+                'inline-flex items-center gap-2 rounded-lg px-5 py-2 transition-colors cursor-pointer',
+                anual ? 'bg-slate-50 text-slate-900 shadow-sm ring-1 ring-slate-200' : 'text-slate-500 hover:text-slate-700',
+              )}
             >
               Anual
-              <span className={cn('rounded-full px-1.5 py-0.5 text-[10px] font-bold', anual ? 'bg-white/20 text-white' : 'bg-brand-50 text-brand-600')}>2 meses grátis</span>
+              <span className="rounded-full bg-brand-50 px-2 py-0.5 text-[11px] font-bold text-brand-600 ring-1 ring-brand-200">
+                {OFF_PCT}
+              </span>
+            </button>
+            <button
+              role="tab"
+              aria-selected={!anual}
+              onClick={() => setCiclo('mensal')}
+              className={cn(
+                'rounded-lg px-6 py-2 transition-colors cursor-pointer',
+                !anual ? 'bg-slate-50 text-slate-900 shadow-sm ring-1 ring-slate-200' : 'text-slate-500 hover:text-slate-700',
+              )}
+            >
+              Mensal
             </button>
           </div>
         </div>
+      </div>
 
-        {/* cards */}
-        <div className="mt-10 flex flex-wrap items-stretch justify-center gap-5">
+      {/* ----- seção branca arredondada com os cards ----- */}
+      <main className="mt-14 rounded-t-[2.5rem] bg-white pb-16 pt-16">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-stretch justify-center gap-5 px-6 lg:flex-nowrap lg:items-center">
           {planos.map((p) => {
             const Icon = p.icon
-            const destaque = p.id === recommendedId
+            const destaque = planos.length > 1 && p.id === recommendedId
             const sobConsulta = p.monthly === null
             return (
               <div
                 key={p.id}
                 className={cn(
-                  'relative flex w-full flex-col rounded-2xl border bg-white p-6 transition-colors sm:w-80',
-                  destaque ? 'border-brand-300 shadow-md shadow-brand-600/10 ring-1 ring-brand-200/60' : 'border-slate-200 shadow-sm hover:border-slate-300',
+                  'relative flex w-full flex-col rounded-2xl p-6 transition-all duration-200 sm:w-80',
+                  destaque
+                    ? 'z-10 bg-gradient-to-b from-brand-600 to-brand-800 text-white shadow-2xl shadow-brand-600/30 lg:scale-[1.04]'
+                    : 'border border-slate-200 bg-white shadow-sm hover:-translate-y-1 hover:border-brand-200 hover:shadow-lg',
                 )}
               >
                 {destaque && (
-                  <span className="absolute -top-3 left-6 rounded-full bg-brand-600 px-2.5 py-0.5 text-[11px] font-semibold text-white shadow-sm">
-                    Recomendado
+                  <span className="absolute -top-3.5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-slate-900 px-4 py-1 text-[11px] font-bold tracking-widest text-white shadow-md">
+                    ★ O MAIS ESCOLHIDO
                   </span>
                 )}
 
-                <Icon size={28} strokeWidth={1.5} className="text-brand-600" />
-                <h2 className="mt-4 text-lg font-semibold text-slate-900">{p.name}</h2>
-                <p className="mt-0.5 text-sm text-slate-500">{p.audience}</p>
+                {/* ícone + nome + chip OFF */}
+                <div className="flex items-start gap-3">
+                  <span
+                    className={cn(
+                      'flex h-12 w-12 shrink-0 items-center justify-center rounded-xl',
+                      destaque ? 'bg-white/15 text-white' : 'bg-brand-50 text-brand-600',
+                    )}
+                  >
+                    <Icon size={24} strokeWidth={1.7} />
+                  </span>
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h2 className={cn('text-lg font-bold', destaque ? 'text-white' : 'text-slate-900')}>{p.name}</h2>
+                      {anual && !sobConsulta && (
+                        <span
+                          className={cn(
+                            'rounded-full px-2 py-0.5 text-[10px] font-bold',
+                            destaque ? 'bg-white/20 text-white' : 'bg-brand-50 text-brand-600 ring-1 ring-brand-200',
+                          )}
+                        >
+                          {OFF_PCT}
+                        </span>
+                      )}
+                    </div>
+                    <p className={cn('mt-0.5 text-xs leading-snug', destaque ? 'text-brand-100' : 'text-slate-500')}>
+                      {p.audience}
+                    </p>
+                  </div>
+                </div>
 
-                <div className="mt-5 min-h-[4.5rem]">
+                {/* preço */}
+                <div className="mt-6 min-h-[6.5rem]">
                   {sobConsulta ? (
                     <>
-                      <p className="text-3xl font-semibold text-slate-900">Sob consulta</p>
-                      <p className="mt-1 text-xs text-slate-400">Proposta sob medida para a sua operação.</p>
+                      <p className={cn('text-3xl font-extrabold', destaque ? 'text-white' : 'text-slate-900')}>Sob consulta</p>
+                      <p className={cn('mt-2 text-xs', destaque ? 'text-brand-100' : 'text-slate-400')}>
+                        Proposta sob medida para a sua operação.
+                      </p>
                     </>
                   ) : (
                     <>
-                      <div className="flex items-baseline gap-1.5">
-                        <span className="text-4xl font-semibold tracking-tight tabular-nums text-slate-900">{fmt(mesEquivalente(p.monthly!))}</span>
-                        <span className="text-sm text-slate-400">/mês</span>
-                      </div>
-                      {anual ? (
-                        <p className="mt-1 text-xs text-slate-500">
-                          <span className="text-slate-300 line-through">{fmt(p.monthly!)}/mês</span> · {fmt(totalAnual(p.monthly!))}/ano ·{' '}
-                          <span className="font-medium text-brand-600">economize {fmt(economia(p.monthly!))}</span>
+                      {anual && (
+                        <p className={cn('text-sm', destaque ? 'text-brand-100' : 'text-slate-500')}>
+                          De <s className={destaque ? 'text-white/60' : 'text-slate-400'}>{fmt2(p.monthly!)}</s> por
                         </p>
-                      ) : (
-                        <p className="mt-1 text-xs text-slate-400">cobrado mensalmente</p>
                       )}
+                      <div className="flex items-baseline gap-1.5">
+                        <span className={cn('text-4xl font-extrabold tracking-tight tabular-nums', destaque ? 'text-white' : 'text-slate-900')}>
+                          {fmt(mesEquivalente(p.monthly!))}
+                        </span>
+                        <span className={cn('text-sm font-medium', destaque ? 'text-brand-100' : 'text-slate-400')}>/mês</span>
+                      </div>
+                      <p className={cn('mt-2 text-xs leading-relaxed', destaque ? 'text-brand-100' : 'text-slate-500')}>
+                        {anual ? (
+                          <>
+                            Total de {fmt2(totalAnual(p.monthly!))} em até 12x sem juros ·{' '}
+                            <strong className={destaque ? 'text-white' : 'text-brand-600'}>
+                              economize {fmt(economiaAnual(p.monthly!))}
+                            </strong>
+                          </>
+                        ) : (
+                          <>Cobrado mensalmente. Cancele quando quiser.</>
+                        )}
+                      </p>
                     </>
                   )}
                 </div>
 
+                {/* CTA + reversão de risco */}
                 {!authed ? (
                   <Link
                     to="/register"
                     className={cn(
-                      'mt-6 flex h-11 w-full items-center justify-center rounded-lg text-sm font-semibold transition-colors',
-                      destaque ? 'bg-brand-600 text-white shadow-sm shadow-brand-600/25 hover:bg-brand-700' : 'border border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-50',
+                      'mt-5 flex h-11 w-full items-center justify-center rounded-lg text-sm font-semibold transition-colors',
+                      destaque
+                        ? 'bg-white text-brand-700 shadow-sm hover:bg-brand-50'
+                        : 'bg-brand-600 text-white shadow-sm shadow-brand-600/25 hover:bg-brand-700',
                     )}
                   >
-                    Criar conta
+                    {destaque ? 'Começar agora' : 'Escolher plano'}
                   </Link>
+                ) : p.id === planoAtualId ? (
+                  <button
+                    disabled
+                    className={cn(
+                      'mt-5 flex h-11 w-full items-center justify-center gap-1.5 rounded-lg text-sm font-semibold',
+                      destaque
+                        ? 'bg-white/20 text-white ring-1 ring-white/40'
+                        : 'bg-slate-100 text-slate-500 ring-1 ring-slate-200',
+                    )}
+                  >
+                    <Check size={15} /> Seu plano atual
+                  </button>
                 ) : sobConsulta ? (
                   <a
                     href="mailto:contato@controly.app?subject=Plano%20Enterprise%20Controly"
-                    className="mt-6 flex h-11 w-full items-center justify-center rounded-lg border border-slate-200 text-sm font-semibold text-slate-700 transition-colors hover:border-slate-300 hover:bg-slate-50"
+                    className="mt-5 flex h-11 w-full items-center justify-center rounded-lg border border-slate-200 text-sm font-semibold text-slate-700 transition-colors hover:border-slate-300 hover:bg-slate-50"
                   >
                     Falar com a equipe
                   </a>
@@ -236,18 +476,34 @@ export function PlansPage() {
                   <button
                     onClick={() => setCheckout(p)}
                     className={cn(
-                      'mt-6 flex h-11 w-full items-center justify-center rounded-lg text-sm font-semibold transition-colors cursor-pointer',
-                      destaque ? 'bg-brand-600 text-white shadow-sm shadow-brand-600/25 hover:bg-brand-700' : 'border border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-50',
+                      'mt-5 flex h-11 w-full items-center justify-center rounded-lg text-sm font-semibold transition-colors cursor-pointer',
+                      destaque
+                        ? 'bg-white text-brand-700 shadow-sm hover:bg-brand-50'
+                        : 'bg-brand-600 text-white shadow-sm shadow-brand-600/25 hover:bg-brand-700',
                     )}
                   >
-                    Assinar {p.name}
+                    {assinante ? 'Fazer upgrade' : destaque ? 'Começar agora' : 'Escolher plano'}
                   </button>
                 )}
+                {!sobConsulta && (
+                  <p className={cn('mt-2 text-center text-[11px]', destaque ? 'text-brand-100' : 'text-slate-400')}>
+                    7 dias de garantia · sem fidelidade
+                  </p>
+                )}
 
-                <ul className="mt-6 space-y-2.5 border-t border-slate-100 pt-6">
+                {/* features */}
+                <ul className={cn('mt-5 space-y-2.5 border-t pt-5', destaque ? 'border-white/15' : 'border-slate-100')}>
                   {p.features.map((r) => (
-                    <li key={r} className="flex items-start gap-2.5 text-[13px] text-slate-600">
-                      <Check size={15} strokeWidth={2.5} className="mt-0.5 shrink-0 text-brand-600" aria-hidden="true" />
+                    <li
+                      key={r}
+                      className={cn('flex items-start gap-2.5 text-[13px]', destaque ? 'text-brand-50' : 'text-slate-600')}
+                    >
+                      <Check
+                        size={15}
+                        strokeWidth={2.5}
+                        className={cn('mt-0.5 shrink-0', destaque ? 'text-white' : 'text-brand-600')}
+                        aria-hidden="true"
+                      />
                       {r}
                     </li>
                   ))}
@@ -257,10 +513,49 @@ export function PlansPage() {
           })}
         </div>
 
-        <p className="mt-10 text-center text-xs text-slate-400">
-          Valores em reais (BRL). Sem fidelidade — cancele quando quiser.
+        {/* ----- selos de confiança ----- */}
+        <div className="mx-auto mt-14 grid max-w-4xl grid-cols-1 gap-4 px-6 sm:grid-cols-3">
+          {(
+            [
+              [ShieldCheck, 'Dados criptografados', 'CPF, contatos e prontuários protegidos com AES-256, em conformidade com a LGPD.'],
+              [Clock, 'Pronto em 5 minutos', 'Sem instalação e sem treinamento demorado: crie a conta e comece a agendar.'],
+              [CreditCard, 'Pagamento seguro', 'Cancele quando quiser, direto no painel. Sem fidelidade e sem multa.'],
+            ] as const
+          ).map(([Icon, t, d]) => (
+            <div key={t} className="flex items-start gap-3 rounded-2xl bg-slate-50 p-4">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-brand-600 shadow-sm">
+                <Icon size={19} />
+              </span>
+              <div>
+                <p className="text-sm font-semibold text-slate-800">{t}</p>
+                <p className="mt-0.5 text-xs leading-relaxed text-slate-500">{d}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* ----- FAQ ----- */}
+        <div className="mx-auto mt-16 max-w-2xl px-6">
+          <h2 className="text-center text-2xl font-bold tracking-tight text-slate-900">Perguntas frequentes</h2>
+          <div className="mt-6 divide-y divide-slate-100 rounded-2xl border border-slate-200 bg-white shadow-sm">
+            {FAQ.map(({ q, a }) => (
+              <details key={q} className="group px-5 py-4">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-semibold text-slate-800 [&::-webkit-details-marker]:hidden">
+                  {q}
+                  <span className="text-slate-400 transition-transform group-open:rotate-45" aria-hidden="true">
+                    +
+                  </span>
+                </summary>
+                <p className="mt-2 text-sm leading-relaxed text-slate-500">{a}</p>
+              </details>
+            ))}
+          </div>
+        </div>
+
+        <p className="mt-12 text-center text-xs text-slate-400">
+          Valores em reais (BRL). Plano anual equivale a 10 mensalidades (2 meses grátis).
         </p>
-      </div>
+      </main>
 
       {checkout && (
         <CheckoutModal
@@ -325,11 +620,11 @@ function CheckoutModal({
               <div className="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3">
                 <div>
                   <p className="font-semibold text-slate-800">{plan.name}</p>
-                  <p className="text-xs text-slate-500">{plan.audience} · {anual ? 'Anual (2 meses grátis)' : 'Mensal'}</p>
+                  <p className="text-xs text-slate-500">{anual ? 'Anual (2 meses grátis)' : 'Mensal'}</p>
                 </div>
                 <div className="text-right">
                   <p className="text-lg font-bold text-slate-900">{fmt(total)}</p>
-                  <p className="text-xs text-slate-400">{anual ? 'por ano' : 'por mês'}</p>
+                  <p className="text-xs text-slate-400">{anual ? 'por ano · em até 12x sem juros' : 'por mês'}</p>
                 </div>
               </div>
 

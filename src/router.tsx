@@ -12,6 +12,7 @@ import { LoginPage } from '@/features/auth/LoginPage'
 import { RegisterPage } from '@/features/auth/RegisterPage'
 import { PlansPage } from '@/features/plans/PlansPage'
 import { RequireAuth } from '@/features/auth/RequireAuth'
+import { RequireFeature } from '@/features/plans/Paywall'
 import { NotFoundPage } from '@/features/errors/NotFoundPage'
 import { ErrorPage } from '@/features/errors/ErrorPage'
 import { ProfilePage } from '@/features/profile/ProfilePage'
@@ -32,11 +33,11 @@ export const router = createBrowserRouter([
       { index: true, element: <DashboardPage /> },
       { path: 'pacientes', element: <PatientsPage /> },
       { path: 'pacientes/:id', element: <PatientDetailPage /> },
-      { path: 'mensagens', element: <InboxPage /> },
+      { path: 'mensagens', element: <RequireFeature feature="mensagens"><InboxPage /></RequireFeature> },
       { path: 'agenda', element: <AgendaPage /> },
       { path: 'estoque', element: <StockPage /> },
       { path: 'financas', element: <FinancePage /> },
-      { path: 'automacoes', element: <AutomationsPage /> },
+      { path: 'automacoes', element: <RequireFeature feature="automacoes"><AutomationsPage /></RequireFeature> },
       { path: 'perfil', element: <ProfilePage /> },
     ],
   },

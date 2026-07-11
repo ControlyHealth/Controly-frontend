@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
 @theme {
+  --font-script: 'Caveat', 'Segoe Script', cursive;
   --color-brand-50: #e6f8ff;
   --color-brand-100: #ccf1ff;
   --color-brand-200: #99e3ff;
